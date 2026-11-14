@@ -1,0 +1,68 @@
+"""Explicit status and category enums used across the production lifecycle."""
+
+from enum import Enum
+
+
+class JobStatus(str, Enum):
+    CREATED = "CREATED"
+    RUNNING = "RUNNING"
+    PAUSED_FOR_APPROVAL = "PAUSED_FOR_APPROVAL"
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"
+    REJECTED = "REJECTED"
+    CANCELLED = "CANCELLED"
+
+
+class ProductionStage(str, Enum):
+    INITIALIZATION = "INITIALIZATION"
+    RESEARCH = "RESEARCH"
+    SCRIPTING = "SCRIPTING"
+    SHOT_PLANNING = "SHOT_PLANNING"
+    ASSET_INGEST = "ASSET_INGEST"
+    EDITING = "EDITING"
+    CRITIQUE = "CRITIQUE"
+    PUBLISHING = "PUBLISHING"
+
+
+class ApprovalStatus(str, Enum):
+    PENDING = "PENDING"
+    APPROVED = "APPROVED"
+    REJECTED = "REJECTED"
+
+
+class AssetType(str, Enum):
+    SCREEN_RECORDING = "SCREEN_RECORDING"
+    UI_CAPTURE = "UI_CAPTURE"
+    AUDIO_VOICEOVER = "AUDIO_VOICEOVER"
+    AUDIO_BGM = "AUDIO_BGM"
+    STOCK_BROLL = "STOCK_BROLL"
+    DOCUMENT = "DOCUMENT"
+    PROHIBITED_SYNTHETIC = "PROHIBITED_SYNTHETIC"  # Quarantined SVGs/AI diffusion
+
+
+class ReviewStatus(str, Enum):
+    UNREVIEWED = "UNREVIEWED"
+    PENDING = "PENDING"
+    APPROVED = "APPROVED"
+    REJECTED = "REJECTED"
+    QUARANTINED = "QUARANTINED"
+
+
+class CritiqueAspect(str, Enum):
+    AUDIO_LEVELS = "AUDIO_LEVELS"
+    PACING = "PACING"
+    READABILITY = "READABILITY"
+    FACTUAL_ACCURACY = "FACTUAL_ACCURACY"
+    BRAND_COMPLIANCE = "BRAND_COMPLIANCE"
+
+
+class EditOperationType(str, Enum):
+    ADD_TRACK = "ADD_TRACK"
+    INSERT_CLIP = "INSERT_CLIP"
+    MOVE_CLIP = "MOVE_CLIP"
+    SPLIT_CLIP = "SPLIT_CLIP"
+    DELETE_CLIP = "DELETE_CLIP"
+    SET_VOLUME = "SET_VOLUME"
+    ADD_TRANSITION = "ADD_TRANSITION"
+    ADD_CAPTION = "ADD_CAPTION"
+

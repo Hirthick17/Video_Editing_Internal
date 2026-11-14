@@ -1,0 +1,16 @@
+# Core LangGraph & LangChain Workflow Orchestration
+langgraph>=0.2.60
+langgraph-checkpoint>=2.1.2
+langgraph-checkpoint-sqlite>=2.0.11
+
+# Data Modeling & Validation
+pydantic>=2.10.0
+pydantic-settings>=2.7.0
+
+# Image & Kinetic Typography Animation Engine
+Pillow>=11.0.0
+numpy>=2.0.0
+
+# Testing Framework
+pytest>=8.0.0
+

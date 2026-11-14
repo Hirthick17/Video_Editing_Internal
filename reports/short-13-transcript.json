@@ -1,0 +1,362 @@
+{
+  "asset_id": "ast_voiceover_short13",
+  "text": "Managing 50 PG tenants and still tracking rent in Excel? Every month you chase WhatsApp screenshots, match UPI numbers, and waste hours updating spreadsheets. With TellOS, the tenant sends the screenshot on WhatsApp. The bot reads the receipt, sends an instant confirmation, and updates your ledger automatically. Zero manual typing. Zero missed rent. Automate your PG on WhatsApp today.",
+  "language": "en",
+  "words": [
+    {
+      "word": "Managing",
+      "start_seconds": 0.15,
+      "end_seconds": 0.527,
+      "confidence": 0.99
+    },
+    {
+      "word": "50",
+      "start_seconds": 0.61,
+      "end_seconds": 0.987,
+      "confidence": 0.99
+    },
+    {
+      "word": "PG",
+      "start_seconds": 1.07,
+      "end_seconds": 1.447,
+      "confidence": 0.99
+    },
+    {
+      "word": "tenants",
+      "start_seconds": 1.53,
+      "end_seconds": 1.907,
+      "confidence": 0.99
+    },
+    {
+      "word": "and",
+      "start_seconds": 1.99,
+      "end_seconds": 2.367,
+      "confidence": 0.99
+    },
+    {
+      "word": "still",
+      "start_seconds": 2.45,
+      "end_seconds": 2.827,
+      "confidence": 0.99
+    },
+    {
+      "word": "tracking",
+      "start_seconds": 2.91,
+      "end_seconds": 3.287,
+      "confidence": 0.99
+    },
+    {
+      "word": "rent",
+      "start_seconds": 3.37,
+      "end_seconds": 3.747,
+      "confidence": 0.99
+    },
+    {
+      "word": "in",
+      "start_seconds": 3.83,
+      "end_seconds": 4.207,
+      "confidence": 0.99
+    },
+    {
+      "word": "Excel?",
+      "start_seconds": 4.29,
+      "end_seconds": 4.667,
+      "confidence": 0.99
+    },
+    {
+      "word": "Every",
+      "start_seconds": 5.15,
+      "end_seconds": 5.537,
+      "confidence": 0.99
+    },
+    {
+      "word": "month",
+      "start_seconds": 5.621,
+      "end_seconds": 6.008,
+      "confidence": 0.99
+    },
+    {
+      "word": "you",
+      "start_seconds": 6.093,
+      "end_seconds": 6.479,
+      "confidence": 0.99
+    },
+    {
+      "word": "chase",
+      "start_seconds": 6.564,
+      "end_seconds": 6.951,
+      "confidence": 0.99
+    },
+    {
+      "word": "WhatsApp",
+      "start_seconds": 7.036,
+      "end_seconds": 7.422,
+      "confidence": 0.99
+    },
+    {
+      "word": "screenshots,",
+      "start_seconds": 7.507,
+      "end_seconds": 7.894,
+      "confidence": 0.99
+    },
+    {
+      "word": "match",
+      "start_seconds": 7.979,
+      "end_seconds": 8.365,
+      "confidence": 0.99
+    },
+    {
+      "word": "UPI",
+      "start_seconds": 8.45,
+      "end_seconds": 8.837,
+      "confidence": 0.99
+    },
+    {
+      "word": "numbers,",
+      "start_seconds": 8.921,
+      "end_seconds": 9.308,
+      "confidence": 0.99
+    },
+    {
+      "word": "and",
+      "start_seconds": 9.393,
+      "end_seconds": 9.779,
+      "confidence": 0.99
+    },
+    {
+      "word": "waste",
+      "start_seconds": 9.864,
+      "end_seconds": 10.251,
+      "confidence": 0.99
+    },
+    {
+      "word": "hours",
+      "start_seconds": 10.336,
+      "end_seconds": 10.722,
+      "confidence": 0.99
+    },
+    {
+      "word": "updating",
+      "start_seconds": 10.807,
+      "end_seconds": 11.194,
+      "confidence": 0.99
+    },
+    {
+      "word": "spreadsheets.",
+      "start_seconds": 11.279,
+      "end_seconds": 11.665,
+      "confidence": 0.99
+    },
+    {
+      "word": "With",
+      "start_seconds": 12.15,
+      "end_seconds": 12.492,
+      "confidence": 0.99
+    },
+    {
+      "word": "TellOS,",
+      "start_seconds": 12.567,
+      "end_seconds": 12.91,
+      "confidence": 0.99
+    },
+    {
+      "word": "the",
+      "start_seconds": 12.985,
+      "end_seconds": 13.327,
+      "confidence": 0.99
+    },
+    {
+      "word": "tenant",
+      "start_seconds": 13.402,
+      "end_seconds": 13.744,
+      "confidence": 0.99
+    },
+    {
+      "word": "sends",
+      "start_seconds": 13.82,
+      "end_seconds": 14.162,
+      "confidence": 0.99
+    },
+    {
+      "word": "the",
+      "start_seconds": 14.237,
+      "end_seconds": 14.579,
+      "confidence": 0.99
+    },
+    {
+      "word": "screenshot",
+      "start_seconds": 14.654,
+      "end_seconds": 14.997,
+      "confidence": 0.99
+    },
+    {
+      "word": "on",
+      "start_seconds": 15.072,
+      "end_seconds": 15.414,
+      "confidence": 0.99
+    },
+    {
+      "word": "WhatsApp.",
+      "start_seconds": 15.489,
+      "end_seconds": 15.831,
+      "confidence": 0.99
+    },
+    {
+      "word": "The",
+      "start_seconds": 15.907,
+      "end_seconds": 16.249,
+      "confidence": 0.99
+    },
+    {
+      "word": "bot",
+      "start_seconds": 16.324,
+      "end_seconds": 16.666,
+      "confidence": 0.99
+    },
+    {
+      "word": "reads",
+      "start_seconds": 16.741,
+      "end_seconds": 17.084,
+      "confidence": 0.99
+    },
+    {
+      "word": "the",
+      "start_seconds": 17.159,
+      "end_seconds": 17.501,
+      "confidence": 0.99
+    },
+    {
+      "word": "receipt,",
+      "start_seconds": 17.576,
+      "end_seconds": 17.918,
+      "confidence": 0.99
+    },
+    {
+      "word": "sends",
+      "start_seconds": 17.993,
+      "end_seconds": 18.336,
+      "confidence": 0.99
+    },
+    {
+      "word": "an",
+      "start_seconds": 18.411,
+      "end_seconds": 18.753,
+      "confidence": 0.99
+    },
+    {
+      "word": "instant",
+      "start_seconds": 18.828,
+      "end_seconds": 19.171,
+      "confidence": 0.99
+    },
+    {
+      "word": "confirmation,",
+      "start_seconds": 19.246,
+      "end_seconds": 19.588,
+      "confidence": 0.99
+    },
+    {
+      "word": "and",
+      "start_seconds": 19.663,
+      "end_seconds": 20.005,
+      "confidence": 0.99
+    },
+    {
+      "word": "updates",
+      "start_seconds": 20.08,
+      "end_seconds": 20.423,
+      "confidence": 0.99
+    },
+    {
+      "word": "your",
+      "start_seconds": 20.498,
+      "end_seconds": 20.84,
+      "confidence": 0.99
+    },
+    {
+      "word": "ledger",
+      "start_seconds": 20.915,
+      "end_seconds": 21.257,
+      "confidence": 0.99
+    },
+    {
+      "word": "automatically.",
+      "start_seconds": 21.333,
+      "end_seconds": 21.675,
+      "confidence": 0.99
+    },
+    {
+      "word": "Zero",
+      "start_seconds": 22.15,
+      "end_seconds": 22.669,
+      "confidence": 0.99
+    },
+    {
+      "word": "manual",
+      "start_seconds": 22.783,
+      "end_seconds": 23.303,
+      "confidence": 0.99
+    },
+    {
+      "word": "typing.",
+      "start_seconds": 23.417,
+      "end_seconds": 23.936,
+      "confidence": 0.99
+    },
+    {
+      "word": "Zero",
+      "start_seconds": 24.05,
+      "end_seconds": 24.569,
+      "confidence": 0.99
+    },
+    {
+      "word": "missed",
+      "start_seconds": 24.683,
+      "end_seconds": 25.203,
+      "confidence": 0.99
+    },
+    {
+      "word": "rent.",
+      "start_seconds": 25.317,
+      "end_seconds": 25.836,
+      "confidence": 0.99
+    },
+    {
+      "word": "Automate",
+      "start_seconds": 25.95,
+      "end_seconds": 26.469,
+      "confidence": 0.99
+    },
+    {
+      "word": "your",
+      "start_seconds": 26.583,
+      "end_seconds": 27.103,
+      "confidence": 0.99
+    },
+    {
+      "word": "PG",
+      "start_seconds": 27.217,
+      "end_seconds": 27.736,
+      "confidence": 0.99
+    },
+    {
+      "word": "on",
+      "start_seconds": 27.85,
+      "end_seconds": 28.369,
+      "confidence": 0.99
+    },
+    {
+      "word": "WhatsApp",
+      "start_seconds": 28.483,
+      "end_seconds": 29.003,
+      "confidence": 0.99
+    },
+    {
+      "word": "today.",
+      "start_seconds": 29.117,
+      "end_seconds": 29.636,
+      "confidence": 0.99
+    }
+  ],
+  "created_at_utc": "2026-11-13T06:51:29.911047+00:00"
+}

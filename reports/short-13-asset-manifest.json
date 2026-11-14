@@ -1,0 +1,170 @@
+{
+  "project_id": "8a894b86-d5e0-4222-ab88-df22a8e2168e",
+  "name": "Short 13 - TellOS PG Rent Book",
+  "short_id": "short_13_whatsapp_pg_rent",
+  "root_path": "C:\\Users\\hirth\\hirthick-professional\\video-editor",
+  "description": "YouTube Short demonstrating automated rent receipts directly in WhatsApp chat for PG owners using TellOS.",
+  "target_resolution": "1080x1920",
+  "target_fps": 30,
+  "target_duration_seconds": 30.0,
+  "asset_manifest": {
+    "ast_demo_recording_01": {
+      "asset_id": "ast_demo_recording_01",
+      "file_path": "C:\\Users\\hirth\\TellOS\\PG_Automation\\Ecommerce\\research\\tell-os-remotion-project\\public\\assets\\demo-recording-1.mp4",
+      "file_name": "demo-recording-1.mp4",
+      "file_size_bytes": 45173305,
+      "checksum_sha256": "42b353c14c69940cf0cf2f37e3490baace9ad9254a83f6ab3e0bf6f596346c21",
+      "asset_type": "SCREEN_RECORDING",
+      "source_origin": "original_recording",
+      "provenance": {
+        "role": "Primary UI Demo"
+      },
+      "approval_status": "APPROVED",
+      "is_online": true,
+      "media_info": {
+        "extension": ".mp4",
+        "file_size_bytes": 45173305
+      },
+      "notes": "Authentic product screen demonstration.",
+      "discovered_at_utc": "2026-11-13T06:30:51.750244+00:00"
+    },
+    "ast_broll_spreadsheet_01": {
+      "asset_id": "ast_broll_spreadsheet_01",
+      "file_path": "C:\\Users\\hirth\\hirthick-professional\\video-editor\\broll-spreadsheet.mp4",
+      "file_name": "broll-spreadsheet.mp4",
+      "file_size_bytes": 1546876,
+      "checksum_sha256": "b473da39802ffb732a8dca9a3d2cb97c69b68299d348392d0c71034e1251ce35",
+      "asset_type": "STOCK_BROLL",
+      "source_origin": "stock_media",
+      "provenance": {
+        "platform": "Pixabay",
+        "license": "Pixabay Content License - Free for commercial use",
+        "query": "spreadsheet",
+        "role": "Visual Pain Hook"
+      },
+      "approval_status": "APPROVED",
+      "is_online": true,
+      "media_info": {
+        "extension": ".mp4",
+        "file_size_bytes": 1546876
+      },
+      "notes": "Approved stock B-roll.",
+      "discovered_at_utc": "2026-11-13T06:30:51.761137+00:00"
+    },
+    "ast_bg_music_01": {
+      "asset_id": "ast_bg_music_01",
+      "file_path": "C:\\Users\\hirth\\hirthick-professional\\video-editor\\bg-music.mp3",
+      "file_name": "bg-music.mp3",
+      "file_size_bytes": 2289111,
+      "checksum_sha256": "2c088d140eeb2efcb18bb032136083b6b0868852ff47acee6b8a75eca4e813a0",
+      "asset_type": "AUDIO_BGM",
+      "source_origin": "stock_audio",
+      "provenance": {
+        "role": "Subtle background music bed ducked at -18dB"
+      },
+      "approval_status": "APPROVED",
+      "is_online": true,
+      "media_info": {
+        "extension": ".mp3",
+        "file_size_bytes": 2289111
+      },
+      "notes": "Background audio soundtrack.",
+      "discovered_at_utc": "2026-11-13T06:30:51.770949+00:00"
+    },
+    "ast_quarantined_card1_hook": {
+      "asset_id": "ast_quarantined_card1_hook",
+      "file_path": "C:\\Users\\hirth\\hirthick-professional\\video-editor\\shorts-assets\\card1_hook.svg",
+      "file_name": "card1_hook.svg",
+      "file_size_bytes": 2245,
+      "checksum_sha256": "a9eee5e9f150b2ec715821d42eb8fa335abff3db7223342f880f7b855fb7cb09",
+      "asset_type": "PROHIBITED_SYNTHETIC",
+      "source_origin": "quarantined_synthetic",
+      "provenance": {
+        "reason": "Quarantined Phase 0 synthetic SVG graphic"
+      },
+      "approval_status": "QUARANTINED",
+      "is_online": true,
+      "media_info": {},
+      "notes": "Quarantined by production guardrail: SVG graphics are prohibited for YouTube Shorts production.",
+      "discovered_at_utc": "2026-11-13T06:30:51.778874+00:00"
+    },
+    "ast_quarantined_card2_solution": {
+      "asset_id": "ast_quarantined_card2_solution",
+      "file_path": "C:\\Users\\hirth\\hirthick-professional\\video-editor\\shorts-assets\\card2_solution.svg",
+      "file_name": "card2_solution.svg",
+      "file_size_bytes": 2248,
+      "checksum_sha256": "563723a29aa70c06afe831db803fd37b60f2177af1e0d9a4bf30f4f9dc8851a9",
+      "asset_type": "PROHIBITED_SYNTHETIC",
+      "source_origin": "quarantined_synthetic",
+      "provenance": {
+        "reason": "Quarantined Phase 0 synthetic SVG graphic"
+      },
+      "approval_status": "QUARANTINED",
+      "is_online": true,
+      "media_info": {},
+      "notes": "Quarantined by production guardrail: SVG graphics are prohibited for YouTube Shorts production.",
+      "discovered_at_utc": "2026-11-13T06:30:51.787294+00:00"
+    },
+    "ast_quarantined_card3_insight": {
+      "asset_id": "ast_quarantined_card3_insight",
+      "file_path": "C:\\Users\\hirth\\hirthick-professional\\video-editor\\shorts-assets\\card3_insight.svg",
+      "file_name": "card3_insight.svg",
+      "file_size_bytes": 3976,
+      "checksum_sha256": "863cc58857c2c5594ee541f695c885c5623accd2bb66758cca3dd87aeb00360e",
+      "asset_type": "PROHIBITED_SYNTHETIC",
+      "source_origin": "quarantined_synthetic",
+      "provenance": {
+        "reason": "Quarantined Phase 0 synthetic SVG graphic"
+      },
+      "approval_status": "QUARANTINED",
+      "is_online": true,
+      "media_info": {},
+      "notes": "Quarantined by production guardrail: SVG graphics are prohibited for YouTube Shorts production.",
+      "discovered_at_utc": "2026-11-13T06:30:51.794933+00:00"
+    },
+    "ast_quarantined_card4_cta": {
+      "asset_id": "ast_quarantined_card4_cta",
+      "file_path": "C:\\Users\\hirth\\hirthick-professional\\video-editor\\shorts-assets\\card4_cta.svg",
+      "file_name": "card4_cta.svg",
+      "file_size_bytes": 2209,
+      "checksum_sha256": "8b7f69b23cfc90d902dab807834ffb6fd570c19c53a50f4e8a14e7ca59a93331",
+      "asset_type": "PROHIBITED_SYNTHETIC",
+      "source_origin": "quarantined_synthetic",
+      "provenance": {
+        "reason": "Quarantined Phase 0 synthetic SVG graphic"
+      },
+      "approval_status": "QUARANTINED",
+      "is_online": true,
+      "media_info": {},
+      "notes": "Quarantined by production guardrail: SVG graphics are prohibited for YouTube Shorts production.",
+      "discovered_at_utc": "2026-11-13T06:30:51.802171+00:00"
+    },
+    "ast_missing_footage_sample": {
+      "asset_id": "ast_missing_footage_sample",
+      "file_path": "c:\\Users\\hirth\\hirthick-professional\\video-editor\\non_existent_footage.mp4",
+      "file_name": "non_existent_footage.mp4",
+      "file_size_bytes": 0,
+      "checksum_sha256": "",
+      "asset_type": "DOCUMENT",
+      "source_origin": "missing",
+      "provenance": {},
+      "approval_status": "REJECTED",
+      "is_online": false,
+      "media_info": {},
+      "notes": "File is offline or missing from local filesystem.",
+      "discovered_at_utc": "2026-11-13T06:30:51.802274+00:00"
+    }
+  },
+  "quarantined_assets": [
+    "ast_quarantined_card1_hook",
+    "ast_quarantined_card2_solution",
+    "ast_quarantined_card3_insight",
+    "ast_quarantined_card4_cta"
+  ],
+  "missing_assets": [
+    "ast_missing_footage_sample"
+  ],
+  "approved_by_owner": false,
+  "created_at_utc": "2026-11-13T06:30:51.691678+00:00",
+  "updated_at_utc": "2026-11-13T06:30:51.802283+00:00"
+}

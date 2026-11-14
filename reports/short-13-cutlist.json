@@ -1,0 +1,302 @@
+[
+  {
+    "operation_id": "op_add_track_v1_demo",
+    "operation_type": "ADD_TRACK",
+    "idempotency_key": "idemp_track_track_v1_demo",
+    "track_id": "track_v1_demo",
+    "clip_spec": null,
+    "parameters": {
+      "name": "Main Product Video (TellOS)",
+      "type": "video",
+      "order": 0
+    },
+    "applied": false,
+    "verified": false
+  },
+  {
+    "operation_id": "op_add_track_v2_broll",
+    "operation_type": "ADD_TRACK",
+    "idempotency_key": "idemp_track_track_v2_broll",
+    "track_id": "track_v2_broll",
+    "clip_spec": null,
+    "parameters": {
+      "name": "B-roll Overlay (Excel Pain)",
+      "type": "video",
+      "order": 1
+    },
+    "applied": false,
+    "verified": false
+  },
+  {
+    "operation_id": "op_add_track_a1_narration",
+    "operation_type": "ADD_TRACK",
+    "idempotency_key": "idemp_track_track_a1_narration",
+    "track_id": "track_a1_narration",
+    "clip_spec": null,
+    "parameters": {
+      "name": "Voiceover Narration (0dB)",
+      "type": "audio",
+      "order": 2
+    },
+    "applied": false,
+    "verified": false
+  },
+  {
+    "operation_id": "op_add_track_a2_bgm",
+    "operation_type": "ADD_TRACK",
+    "idempotency_key": "idemp_track_track_a2_bgm",
+    "track_id": "track_a2_bgm",
+    "clip_spec": null,
+    "parameters": {
+      "name": "Background Music (-18dB)",
+      "type": "audio",
+      "order": 3
+    },
+    "applied": false,
+    "verified": false
+  },
+  {
+    "operation_id": "op_add_track_txt_captions",
+    "operation_type": "ADD_TRACK",
+    "idempotency_key": "idemp_track_track_txt_captions",
+    "track_id": "track_txt_captions",
+    "clip_spec": null,
+    "parameters": {
+      "name": "Native Text Subtitles",
+      "type": "text",
+      "order": 4
+    },
+    "applied": false,
+    "verified": false
+  },
+  {
+    "operation_id": "op_ins_shot_01_hook_spreadsheet",
+    "operation_type": "INSERT_CLIP",
+    "idempotency_key": "idemp_clip_shot_01_hook_spreadsheet",
+    "track_id": "track_v2_broll",
+    "clip_spec": {
+      "item_id": "item_shot_01_hook_spreadsheet",
+      "track_id": "track_v2_broll",
+      "asset_id": "ast_broll_spreadsheet_01",
+      "start_frame": 0,
+      "end_frame": 150,
+      "source_in_frame": 0,
+      "source_out_frame": 150,
+      "volume": 0.0,
+      "name": "Clip: shot_01_hook_spreadsheet"
+    },
+    "parameters": {
+      "visual_notes": "Excel Spreadsheet Review (landscape_desktop)"
+    },
+    "applied": false,
+    "verified": false
+  },
+  {
+    "operation_id": "op_ins_shot_02_tenant_receipt",
+    "operation_type": "INSERT_CLIP",
+    "idempotency_key": "idemp_clip_shot_02_tenant_receipt",
+    "track_id": "track_v1_demo",
+    "clip_spec": {
+      "item_id": "item_shot_02_tenant_receipt",
+      "track_id": "track_v1_demo",
+      "asset_id": "ast_demo_recording_01",
+      "start_frame": 150,
+      "end_frame": 360,
+      "source_in_frame": 150,
+      "source_out_frame": 360,
+      "volume": 0.0,
+      "name": "Clip: shot_02_tenant_receipt"
+    },
+    "parameters": {
+      "visual_notes": "WhatsApp Receipt Intake (portrait_mobile)"
+    },
+    "applied": false,
+    "verified": false
+  },
+  {
+    "operation_id": "op_ins_shot_03_bot_processing_ledger",
+    "operation_type": "INSERT_CLIP",
+    "idempotency_key": "idemp_clip_shot_03_bot_processing_ledger",
+    "track_id": "track_v1_demo",
+    "clip_spec": {
+      "item_id": "item_shot_03_bot_processing_ledger",
+      "track_id": "track_v1_demo",
+      "asset_id": "ast_demo_recording_01",
+      "start_frame": 360,
+      "end_frame": 660,
+      "source_in_frame": 420,
+      "source_out_frame": 720,
+      "volume": 0.0,
+      "name": "Clip: shot_03_bot_processing_ledger"
+    },
+    "parameters": {
+      "visual_notes": "TellOS Bot OCR & Live Sheet Update (portrait_mobile)"
+    },
+    "applied": false,
+    "verified": false
+  },
+  {
+    "operation_id": "op_ins_shot_04_dashboard_cta",
+    "operation_type": "INSERT_CLIP",
+    "idempotency_key": "idemp_clip_shot_04_dashboard_cta",
+    "track_id": "track_v1_demo",
+    "clip_spec": {
+      "item_id": "item_shot_04_dashboard_cta",
+      "track_id": "track_v1_demo",
+      "asset_id": "ast_demo_recording_01",
+      "start_frame": 660,
+      "end_frame": 900,
+      "source_in_frame": 720,
+      "source_out_frame": 960,
+      "volume": 0.0,
+      "name": "Clip: shot_04_dashboard_cta"
+    },
+    "parameters": {
+      "visual_notes": "Clean Paid Ledger Summary (portrait_mobile)"
+    },
+    "applied": false,
+    "verified": false
+  },
+  {
+    "operation_id": "op_ins_a1_narration",
+    "operation_type": "INSERT_CLIP",
+    "idempotency_key": "idemp_clip_a1_narration",
+    "track_id": "track_a1_narration",
+    "clip_spec": {
+      "item_id": "item_a1_narration",
+      "track_id": "track_a1_narration",
+      "asset_id": "ast_voiceover_short13",
+      "start_frame": 0,
+      "end_frame": 900,
+      "source_in_frame": 0,
+      "source_out_frame": 900,
+      "volume": 1.0,
+      "name": "Voiceover Narration (58 Words)"
+    },
+    "parameters": {
+      "audio_level_db": 0.0,
+      "role": "primary_speech"
+    },
+    "applied": false,
+    "verified": false
+  },
+  {
+    "operation_id": "op_ins_a2_bgm",
+    "operation_type": "INSERT_CLIP",
+    "idempotency_key": "idemp_clip_a2_bgm",
+    "track_id": "track_a2_bgm",
+    "clip_spec": {
+      "item_id": "item_a2_bgm",
+      "track_id": "track_a2_bgm",
+      "asset_id": "ast_bg_music_01",
+      "start_frame": 0,
+      "end_frame": 900,
+      "source_in_frame": 0,
+      "source_out_frame": 900,
+      "volume": 0.125,
+      "name": "Background Music (Ducked -18dB)"
+    },
+    "parameters": {
+      "audio_level_db": -18.0,
+      "ducked": true
+    },
+    "applied": false,
+    "verified": false
+  },
+  {
+    "operation_id": "op_cap_cue1_hook",
+    "operation_type": "ADD_CAPTION",
+    "idempotency_key": "idemp_cap_cue1_hook",
+    "track_id": "track_txt_captions",
+    "clip_spec": null,
+    "parameters": {
+      "caption_id": "cap_cue1_hook",
+      "start_frame": 0,
+      "end_frame": 150,
+      "text": "Managing 50 PG tenants and still tracking rent in Excel?",
+      "style": {
+        "font_family": "System Sans-Serif",
+        "font_size": 48,
+        "color": "#FFFFFF",
+        "stroke_color": "#000000",
+        "stroke_width": 4,
+        "position_y": "bottom_safe_zone",
+        "native_text": true
+      }
+    },
+    "applied": false,
+    "verified": false
+  },
+  {
+    "operation_id": "op_cap_cue2_problem",
+    "operation_type": "ADD_CAPTION",
+    "idempotency_key": "idemp_cap_cue2_problem",
+    "track_id": "track_txt_captions",
+    "clip_spec": null,
+    "parameters": {
+      "caption_id": "cap_cue2_problem",
+      "start_frame": 150,
+      "end_frame": 360,
+      "text": "Every month you chase WhatsApp screenshots, match UPI numbers, and waste hours updating spreadsheets.",
+      "style": {
+        "font_family": "System Sans-Serif",
+        "font_size": 48,
+        "color": "#FFFFFF",
+        "stroke_color": "#000000",
+        "stroke_width": 4,
+        "position_y": "bottom_safe_zone",
+        "native_text": true
+      }
+    },
+    "applied": false,
+    "verified": false
+  },
+  {
+    "operation_id": "op_cap_cue3_solution",
+    "operation_type": "ADD_CAPTION",
+    "idempotency_key": "idemp_cap_cue3_solution",
+    "track_id": "track_txt_captions",
+    "clip_spec": null,
+    "parameters": {
+      "caption_id": "cap_cue3_solution",
+      "start_frame": 360,
+      "end_frame": 660,
+      "text": "With TellOS, the tenant sends the screenshot on WhatsApp. The bot reads the receipt, sends an instant confirmation, and updates your ledger automatically.",
+      "style": {
+        "font_family": "System Sans-Serif",
+        "font_size": 48,
+        "color": "#FFFFFF",
+        "stroke_color": "#000000",
+        "stroke_width": 4,
+        "position_y": "bottom_safe_zone",
+        "native_text": true
+      }
+    },
+    "applied": false,
+    "verified": false
+  },
+  {
+    "operation_id": "op_cap_cue4_cta",
+    "operation_type": "ADD_CAPTION",
+    "idempotency_key": "idemp_cap_cue4_cta",
+    "track_id": "track_txt_captions",
+    "clip_spec": null,
+    "parameters": {
+      "caption_id": "cap_cue4_cta",
+      "start_frame": 660,
+      "end_frame": 900,
+      "text": "Zero manual typing. Zero missed rent. Automate your PG on WhatsApp today.",
+      "style": {
+        "font_family": "System Sans-Serif",
+        "font_size": 48,
+        "color": "#FFFFFF",
+        "stroke_color": "#000000",
+        "stroke_width": 4,
+        "position_y": "bottom_safe_zone",
+        "native_text": true
+      }
+    },
+    "applied": false,
+    "verified": false
+  }
+]
