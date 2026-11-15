@@ -3,6 +3,10 @@
 from pathlib import Path
 from pydantic_settings import BaseSettings
 
+# Philosophy core — imported here so every module that imports config
+# automatically has access to the editing guardrails.
+from app.philosophy import EditingPhilosophy, PhilosophyGuard, PhilosophyViolationError, philosophy  # noqa: F401
+
 
 class Settings(BaseSettings):
     app_name: str = "HirthicksVisionStudio"

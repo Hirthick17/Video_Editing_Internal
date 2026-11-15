@@ -128,7 +128,13 @@ class ProjectScannerService:
         external_demo_path: Optional[Union[str, Path]] = None,
     ) -> ProjectRecord:
         """Scan Short #13 ('TellOS PG Rent Book on WhatsApp') candidate project assets."""
-        base = Path(base_dir) if base_dir else Path(r"C:\Users\hirth\hirthick-professional\video-editor")
+        repo_media = Path(__file__).resolve().parent.parent.parent / "assets" / "sample-media"
+        if base_dir:
+            base = Path(base_dir)
+        elif repo_media.exists():
+            base = repo_media
+        else:
+            base = Path("assets/sample-media")
 
         project_record = ProjectRecord(
             project_id="8a894b86-d5e0-4222-ab88-df22a8e2168e",
@@ -147,9 +153,8 @@ class ProjectScannerService:
         candidate_files = []
 
         # 1. Primary authentic demo recording
-        demo_path = external_demo_path or Path(
-            r"C:\Users\hirth\TellOS\PG_Automation\Ecommerce\research\tell-os-remotion-project\public\assets\demo-recording-1.mp4"
-        )
+        default_demo = repo_media / "demo-recording-1.mp4"
+        demo_path = external_demo_path or default_demo
         candidate_files.append(("ast_demo_recording_01", demo_path, {"role": "Primary UI Demo"}))
 
         # 2. Approved stock B-roll

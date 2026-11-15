@@ -14,7 +14,7 @@ from app.state.enums import AssetType, ReviewStatus
 
 def test_extract_media_metadata_real_assets():
     """Verify ffprobe metadata extraction on real local files."""
-    broll_path = Path(r"C:\Users\hirth\hirthick-professional\video-editor\broll-spreadsheet.mp4")
+    broll_path = Path("assets/sample-media/broll-spreadsheet.mp4")
     if broll_path.exists():
         meta = MediaUnderstandingService.extract_media_metadata(broll_path)
         assert meta.width == 960

@@ -2,6 +2,8 @@
 
 import json
 import logging
+import os
+import shutil
 import subprocess
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -69,9 +71,15 @@ class ExportService:
         target_file.parent.mkdir(parents=True, exist_ok=True)
 
         # Check for bundled ChatCut ffmpeg
-        ffmpeg_bin = Path(
-            r"C:\Users\hirth\AppData\Local\Programs\ChatCut\resources\app.asar.unpacked\node_modules\ffmpeg-ffprobe-static\ffmpeg.exe"
+        local_app = os.environ.get("LOCALAPPDATA", "")
+        ffmpeg_bin = (
+            Path(local_app) / "Programs" / "ChatCut" / "resources" / "app.asar.unpacked" / "node_modules" / "ffmpeg-ffprobe-static" / "ffmpeg.exe"
+            if local_app else Path("nonexistent")
         )
+        if not ffmpeg_bin.exists():
+            sys_ffmpeg = shutil.which("ffmpeg")
+            if sys_ffmpeg:
+                ffmpeg_bin = Path(sys_ffmpeg)
 
         rendered_successfully = False
         if ffmpeg_bin.exists():

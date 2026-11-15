@@ -1,0 +1,90 @@
+{
+  "version": 1,
+  "short_id": "SHORT-013",
+  "title": "TellOS PG Tenant Management — 30 s Short",
+  "total_duration_seconds": 30.0,
+  "total_cuts": 5,
+  "cuts": [
+    {
+      "cut_id": "CUT-001",
+      "section": "HOOK",
+      "dialogue": "Managing 50 PG tenants and still tracking Excel?",
+      "camera_instruction": "MCU (Mid Close-Up), camera slightly above eye level, fill frame with face, 9:16 portrait, natural window light",
+      "body_language_cue": "Lean forward slightly, direct eye contact, pause 0.5 s before punchline — let the question land",
+      "start_second": 0.0,
+      "end_second": 5.0,
+      "duration_seconds": 5.0,
+      "word_count": 8,
+      "zoom_direction": "SLOW_ZOOM_IN",
+      "sfx_note": "Soft notification ping at 0 s to grab attention"
+    },
+    {
+      "cut_id": "CUT-002",
+      "section": "PROBLEM",
+      "dialogue": "Every month it's the same chaos — WhatsApp UPI screenshots, missed payments, duplicate entries. You're running a business, not a spreadsheet.",
+      "camera_instruction": "CU (Close-Up) face, eyes slightly narrowed, hand gesture tracing the problem in the air",
+      "body_language_cue": "Right hand traces a messy horizontal zigzag as you list pain points; shake head slightly on 'chaos'",
+      "start_second": 5.0,
+      "end_second": 12.0,
+      "duration_seconds": 7.0,
+      "word_count": 21,
+      "zoom_direction": "STATIC",
+      "sfx_note": "WhatsApp message tone at 5.5 s (subtle, once)"
+    },
+    {
+      "cut_id": "CUT-003",
+      "section": "DEMO",
+      "dialogue": "TellOS gives every tenant a digital ledger — one tap and you see who paid, who didn't, and the exact UPI reference.",
+      "camera_instruction": "OTS (Over-The-Shoulder) shot: phone held in left hand, screen visible in frame, app UI clearly readable; cut to phone ECU for 2 s to show tap interaction",
+      "body_language_cue": "Hold phone steady at chest height, tap the screen confidently while narrating; natural, unhurried pacing",
+      "start_second": 12.0,
+      "end_second": 22.0,
+      "duration_seconds": 10.0,
+      "word_count": 22,
+      "zoom_direction": "SLOW_ZOOM_IN",
+      "sfx_note": "Subtle UI tap sound at 14 s and 18 s"
+    },
+    {
+      "cut_id": "CUT-004",
+      "section": "SOLUTION",
+      "dialogue": "One tap. Instant ledger. Zero chasing.",
+      "camera_instruction": "MCU (Mid Close-Up), confident and open posture, slight uptilt of chin, fill frame",
+      "body_language_cue": "Confident smile, hold index finger up on 'one tap', then open both palms on 'zero chasing'",
+      "start_second": 22.0,
+      "end_second": 27.0,
+      "duration_seconds": 5.0,
+      "word_count": 6,
+      "zoom_direction": "STATIC",
+      "sfx_note": "Satisfying 'ding' completion sound at 27 s"
+    },
+    {
+      "cut_id": "CUT-005",
+      "section": "CTA",
+      "dialogue": "Link in bio. Try free.",
+      "camera_instruction": "CU (Close-Up) face, direct eye contact with lens, centred in frame, clean background",
+      "body_language_cue": "Point directly at camera with index finger on 'link in bio', then hold the gesture for a full second; warm, inviting smile",
+      "start_second": 27.0,
+      "end_second": 30.0,
+      "duration_seconds": 3.0,
+      "word_count": 5,
+      "zoom_direction": "SLOW_ZOOM_OUT",
+      "sfx_note": ""
+    }
+  ],
+  "philosophy_constraints": {
+    "typography_first": true,
+    "font_family": "Poppins",
+    "font_weight_primary": 700,
+    "font_weight_body": 400,
+    "text_case": "sentence_case",
+    "caption_style": "word_reveal",
+    "accent_color_hex": "#25D366",
+    "accent_color_name": "WhatsApp Green",
+    "bgm_duck_db": -18.0,
+    "narration_target_wpm_min": 110,
+    "narration_target_wpm_max": 150
+  },
+  "generated_at_utc": "2026-11-15T09:03:17.831649+00:00",
+  "approval_status": "PENDING",
+  "approval_feedback": ""
+}

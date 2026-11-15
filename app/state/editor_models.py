@@ -111,9 +111,21 @@ class EditorProject(BaseModel):
 
 def normalize_chatcut_project(raw: Dict[str, Any]) -> EditorProject:
     """Normalize raw ChatCut target_project or list_projects dictionary into EditorProject."""
+    if isinstance(raw, dict) and "content" in raw and isinstance(raw["content"], list):
+        for c in raw["content"]:
+            if isinstance(c, dict) and c.get("type") == "text":
+                try:
+                    import json
+                    parsed = json.loads(c["text"])
+                    if isinstance(parsed, dict) and ("projectId" in parsed or "project_id" in parsed):
+                        raw = parsed
+                        break
+                except Exception:
+                    pass
+
     project_id = raw.get("projectId") or raw.get("project_id") or raw.get("id", "")
     name = raw.get("name") or raw.get("projectName") or "Untitled Project"
-    active_tl = raw.get("activeTimelineId") or raw.get("active_timeline_id")
+    active_tl = raw.get("activeTimelineId") or raw.get("active_timeline_id") or raw.get("timelineId")
     timeline_ids = raw.get("timelineIds") or raw.get("timeline_ids") or []
     if active_tl and active_tl not in timeline_ids:
         timeline_ids.append(active_tl)
@@ -128,8 +140,81 @@ def normalize_chatcut_project(raw: Dict[str, Any]) -> EditorProject:
     )
 
 
-def normalize_chatcut_timeline(raw: Dict[str, Any], project_id: str = "") -> EditorTimeline:
+def parse_chatcut_text_preview(text: str, project_id: str = "") -> Dict[str, Any]:
+    """Parse text output from ChatCut MCP preview_timeline into structured dict."""
+    import re
+    lines = [line.rstrip() for line in text.strip().splitlines() if line.strip()]
+    header = lines[0] if lines else ""
+    tl_id_m = re.search(r'Timeline\s+"[^"]*"\s+([0-9a-fA-F-]+)', header)
+    timeline_id = tl_id_m.group(1) if tl_id_m else ""
+
+    dim_m = re.search(r'(\d+)x(\d+)', header)
+    width = int(dim_m.group(1)) if dim_m else 1080
+    height = int(dim_m.group(2)) if dim_m else 1920
+
+    fps_m = re.search(r'(\d+)fps', header)
+    fps = int(fps_m.group(1)) if fps_m else 30
+
+    dur_m = re.search(r'(\d+)f\s*\(', header)
+    duration_frames = int(dur_m.group(1)) if dur_m else 900
+
+    tracks = []
+    current_track = None
+
+    track_header_pattern = re.compile(r'^([VvAa]\d+|[A-Za-z0-9_-]+)\s+([0-9a-fA-F]+)\s+(video|audio)\s+order=(\d+)')
+    item_pattern = re.compile(r'^\s+\[(\d+),(\d+)\)\s+(video|audio)\s+([0-9a-fA-F]+)\s+placed\s+"([^"]*)"\s+asset\s+([0-9a-fA-F]+)')
+
+    for line in lines[1:]:
+        t_match = track_header_pattern.match(line)
+        if t_match:
+            alias, t_id, t_type, order = t_match.groups()
+            current_track = {
+                "trackId": alias,
+                "name": alias,
+                "type": t_type,
+                "order": int(order),
+                "items": []
+            }
+            tracks.append(current_track)
+            continue
+
+        i_match = item_pattern.match(line)
+        if i_match and current_track:
+            start_f, end_f, i_type, item_id, name, asset_id = i_match.groups()
+            current_track["items"].append({
+                "itemId": item_id,
+                "assetId": asset_id,
+                "name": name,
+                "type": i_type,
+                "startFrame": int(start_f),
+                "endFrame": int(end_f),
+                "trackId": current_track["trackId"],
+            })
+
+    return {
+        "timelineId": timeline_id,
+        "projectId": project_id,
+        "width": width,
+        "height": height,
+        "fps": fps,
+        "durationFrames": duration_frames,
+        "tracks": tracks
+    }
+
+
+def normalize_chatcut_timeline(raw: Any, project_id: str = "") -> EditorTimeline:
     """Normalize raw ChatCut preview_timeline or timeline JSON into EditorTimeline."""
+    if isinstance(raw, str):
+        raw = parse_chatcut_text_preview(raw, project_id=project_id)
+    elif isinstance(raw, dict):
+        if "content" in raw and isinstance(raw["content"], list):
+            for c in raw["content"]:
+                if isinstance(c, dict) and c.get("type") == "text" and "Timeline " in c.get("text", ""):
+                    raw = parse_chatcut_text_preview(c["text"], project_id=project_id)
+                    break
+        elif "tracks" not in raw and "text" in raw:
+            raw = parse_chatcut_text_preview(raw["text"], project_id=project_id)
+
     timeline_id = str(raw.get("timelineId") or raw.get("timeline_id") or raw.get("id", ""))
     proj_id = str(raw.get("projectId") or raw.get("project_id") or project_id)
     width = int(raw.get("width") or 1080)

@@ -24,9 +24,27 @@ from app.state.models import (
 logger = logging.getLogger(__name__)
 
 # Known default ChatCut bundled ffprobe location on Windows
-CHATCUT_BUNDLED_FFPROBE = Path(
-    r"C:\Users\hirth\AppData\Local\Programs\ChatCut\resources\app.asar.unpacked\node_modules\ffmpeg-ffprobe-static\ffprobe.exe"
-)
+def _resolve_ffprobe_bin() -> Path:
+    local_app = os.environ.get("LOCALAPPDATA", "")
+    if local_app:
+        candidate = (
+            Path(local_app)
+            / "Programs"
+            / "ChatCut"
+            / "resources"
+            / "app.asar.unpacked"
+            / "node_modules"
+            / "ffmpeg-ffprobe-static"
+            / "ffprobe.exe"
+        )
+        if candidate.exists():
+            return candidate
+    system_probe = shutil.which("ffprobe")
+    if system_probe:
+        return Path(system_probe)
+    return Path("ffprobe")
+
+CHATCUT_BUNDLED_FFPROBE = _resolve_ffprobe_bin()
 
 
 class MediaMetadata(BaseModel):

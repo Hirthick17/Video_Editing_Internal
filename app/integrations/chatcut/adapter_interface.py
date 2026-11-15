@@ -30,7 +30,7 @@ class ChatCutAdapter(ABC):
         pass
 
     @abstractmethod
-    def get_timeline(self, timeline_id: str) -> Dict[str, Any]:
+    def get_timeline(self, timeline_id: str, project_id: str = "") -> Dict[str, Any]:
         """Fetch timeline structure, tracks, and clips."""
         pass
 
@@ -44,6 +44,7 @@ class ChatCutAdapter(ABC):
         self,
         timeline_id: str,
         operations: List[EditOperation],
+        project_id: str = "",
     ) -> List[Dict[str, Any]]:
         """Apply a batch of editing operations idempotently."""
         pass
@@ -85,7 +86,7 @@ class StubChatCutAdapter(ChatCutAdapter):
             "active_timeline_id": "03501b27-ebf5-4aae-9eb6-6e7df21e0378",
         }
 
-    def get_timeline(self, timeline_id: str) -> Dict[str, Any]:
+    def get_timeline(self, timeline_id: str, project_id: str = "") -> Dict[str, Any]:
         spec = TimelineSpec(width=1080, height=1920, fps=30)
         return {
             "timeline_id": timeline_id,
@@ -114,6 +115,7 @@ class StubChatCutAdapter(ChatCutAdapter):
         self,
         timeline_id: str,
         operations: List[EditOperation],
+        project_id: str = "",
     ) -> List[Dict[str, Any]]:
         results = []
         for op in operations:

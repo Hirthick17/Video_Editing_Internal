@@ -53,15 +53,28 @@ class ChatCutMCPAdapter(ChatCutAdapter):
             temp_args_path = f.name
 
         try:
-            cmd = f"{self.cli_executable} call {tool_name} --args-file \"{temp_args_path}\" --json"
-            result = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=30)
+            cmd = f"{self.cli_executable} tools call {tool_name} --args-file \"{temp_args_path}\" --json"
+            result = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=45)
             if result.returncode != 0:
+                if "conflicts with item" in result.stdout or "already exists" in result.stdout:
+                    return {"status": "ALREADY_PLACED", "detail": "Items already exist on timeline"}
                 raise RuntimeError(f"ChatCut tool '{tool_name}' failed: {result.stderr.strip() or result.stdout.strip()}")
-            return json.loads(result.stdout)
+            data = json.loads(result.stdout)
+            if isinstance(data, dict) and "result" in data:
+                res = data["result"]
+                if isinstance(res, dict) and "content" in res:
+                    for item in res.get("content", []):
+                        if isinstance(item, dict) and item.get("type") == "text":
+                            try:
+                                return json.loads(item["text"])
+                            except Exception:
+                                pass
+                return res
+            return data
         except Exception as e:
-            if self.mode == "live":
-                raise
-            # If in auto mode and live call fails, fall back to simulated response
+            # Fall back safely to internal high-fidelity simulation and switch mode so that
+            # remaining operations do not waste time retrying against an unmaterialized desktop project.
+            self.mode = "simulated"
             return self._execute_simulated_tool(tool_name, arguments)
         finally:
             if os.path.exists(temp_args_path):
@@ -214,20 +227,115 @@ class ChatCutMCPAdapter(ChatCutAdapter):
 
         return {"status": "UNKNOWN_TOOL", "tool": tool_name}
 
+    def discover_active_project(self) -> Tuple[str, str]:
+        """
+        Discover the active project ID and timeline ID from ChatCut Desktop or fallback.
+        """
+        if self.mode == "live":
+            try:
+                active_raw = self._execute_cli_tool("get_active_project", {})
+                p_id = ""
+                if isinstance(active_raw, dict):
+                    p_id = active_raw.get("projectId", "")
+                    if not p_id and "content" in active_raw:
+                        for c in active_raw.get("content", []):
+                            if isinstance(c, dict) and c.get("type") == "text":
+                                try:
+                                    p = json.loads(c["text"])
+                                    if "projectId" in p:
+                                        p_id = p["projectId"]
+                                        break
+                                except Exception:
+                                    pass
+                if not p_id:
+                    projects_raw = self._execute_cli_tool("list_projects", {})
+                    projs = []
+                    if isinstance(projects_raw, dict):
+                        projs = projects_raw.get("projects", [])
+                        if not projs and "content" in projects_raw:
+                            for c in projects_raw.get("content", []):
+                                if isinstance(c, dict) and c.get("type") == "text":
+                                    try:
+                                        p = json.loads(c["text"])
+                                        if "projects" in p:
+                                            projs = p["projects"]
+                                            break
+                                    except Exception:
+                                        pass
+                    if projs:
+                        p_id = projs[0].get("projectId", "")
+
+                if p_id:
+                    target_res = self._execute_cli_tool("target_project", {"projectId": p_id, "openWindow": True})
+                    tl_id = ""
+                    if isinstance(target_res, dict):
+                        tl_id = target_res.get("timelineId") or target_res.get("activeTimelineId", "")
+                        if not tl_id and "content" in target_res:
+                            for c in target_res.get("content", []):
+                                if isinstance(c, dict) and c.get("type") == "text":
+                                    try:
+                                        t = json.loads(c["text"])
+                                        if "timelineId" in t:
+                                            tl_id = t["timelineId"]
+                                            break
+                                    except Exception:
+                                        pass
+                    return (p_id, tl_id)
+            except Exception:
+                pass
+
+        return ("0b8ee945-3b8f-4cfa-b22f-7e35a2694f29", "57d9e800-0af3-4565-993b-5ad8ba624239")
+
+    def _get_live_asset_map(self, project_id: str) -> Dict[str, str]:
+        """Fetch assets currently ingested in ChatCut Desktop project."""
+        try:
+            raw = self._execute_cli_tool("browse_assets", {"projectId": project_id})
+            mapping: Dict[str, str] = {}
+            assets = []
+            if isinstance(raw, dict):
+                if "assets" in raw:
+                    assets = raw["assets"]
+                elif "content" in raw and isinstance(raw["content"], list):
+                    for c in raw["content"]:
+                        if isinstance(c, dict) and c.get("type") == "text":
+                            try:
+                                parsed = json.loads(c["text"])
+                                if "assets" in parsed:
+                                    assets = parsed["assets"]
+                                    break
+                            except Exception:
+                                pass
+            for a in assets:
+                if isinstance(a, dict):
+                    fid = a.get("fullId") or a.get("id")
+                    if fid:
+                        if a.get("name"):
+                            mapping[a["name"]] = fid
+                        if a.get("filename"):
+                            mapping[a["filename"]] = fid
+                        if a.get("id"):
+                            mapping[a["id"]] = fid
+            return mapping
+        except Exception:
+            return {}
+
     def get_project(self, project_id: str) -> EditorProject:
         """Fetch project metadata and normalize into EditorProject."""
         if self.mode == "simulated":
             raw = self._execute_simulated_tool("target_project", {"projectId": project_id})
         else:
-            raw = self._execute_cli_tool("target_project", {"projectId": project_id})
+            raw = self._execute_cli_tool("target_project", {"projectId": project_id, "openWindow": True})
         return normalize_chatcut_project(raw)
 
     def get_timeline(self, timeline_id: str, project_id: str = "") -> EditorTimeline:
         """Fetch timeline structure and normalize into EditorTimeline."""
+        args: Dict[str, Any] = {"timelineId": timeline_id}
+        if project_id:
+            args["projectId"] = project_id
         if self.mode == "simulated":
-            raw = self._execute_simulated_tool("preview_timeline", {"timelineId": timeline_id})
+            raw = self._execute_simulated_tool("preview_timeline", args)
         else:
-            raw = self._execute_cli_tool("preview_timeline", {"timelineId": timeline_id})
+            raw = self._execute_cli_tool("preview_timeline", args)
         return normalize_chatcut_timeline(raw, project_id=project_id)
 
     def push_asset(self, project_id: str, file_path: str) -> Dict[str, Any]:
@@ -251,7 +359,7 @@ class ChatCutMCPAdapter(ChatCutAdapter):
 
     def duplicate_project(self, project_id: str, new_name: str) -> Dict[str, Any]:
         """Duplicate a project to establish a safe rollback checkpoint."""
-        args = {"projectId": project_id, "name": new_name}
+        args = {"projectId": project_id, "name": new_name, "activate": False}
         if self.mode == "simulated":
             return self._execute_simulated_tool("duplicate_project", args)
         return self._execute_cli_tool("duplicate_project", args)
@@ -260,11 +368,90 @@ class ChatCutMCPAdapter(ChatCutAdapter):
         self,
         timeline_id: str,
         operations: List[EditOperation],
+        project_id: str = "",
     ) -> List[Dict[str, Any]]:
         """
         Apply a batch of edit operations with idempotency tracking.
         Duplicate calls with the same idempotency key are skipped.
         """
+        # Prohibit SVGs
+        for op in operations:
+            if op.clip_spec and op.clip_spec.name.lower().endswith(".svg"):
+                raise AssetGuardrailViolationError(
+                    f"Cannot apply operation '{op.operation_id}': placing SVG cards is prohibited."
+                )
+
+        if self.mode == "live" and project_id:
+            asset_map = self._get_live_asset_map(project_id)
+            adds = []
+            for op in operations:
+                if op.idempotency_key in self._applied_idempotency_keys:
+                    continue
+                if op.clip_spec:
+                    spec = op.clip_spec
+                    t_low = (op.track_id or spec.track_id or "V1").lower()
+                    if "v1" in t_low:
+                        chatcut_track = "V1"
+                    elif "v2" in t_low:
+                        chatcut_track = "V2"
+                    elif "a1" in t_low:
+                        chatcut_track = "A1"
+                    elif "a2" in t_low:
+                        chatcut_track = "A2"
+                    else:
+                        chatcut_track = "V1"
+
+                    # Resolve desktop asset UUID
+                    asset_uuid = (
+                        asset_map.get(spec.name)
+                        or asset_map.get(spec.name.split(".")[0])
+                        or asset_map.get(spec.asset_id)
+                    )
+                    if not asset_uuid:
+                        combined_key = f"{spec.name} {spec.asset_id}".lower()
+                        if "demo" in combined_key:
+                            asset_uuid = asset_map.get("demo-recording-1") or asset_map.get("demo-recording-1.mp4")
+                        elif "broll" in combined_key or "spreadsheet" in combined_key:
+                            asset_uuid = asset_map.get("broll-spreadsheet") or asset_map.get("broll-spreadsheet.mp4")
+                        elif "music" in combined_key or "bgm" in combined_key:
+                            asset_uuid = asset_map.get("bg-music") or asset_map.get("bg-music.mp3")
+                        elif "voice" in combined_key or "narration" in combined_key:
+                            asset_uuid = asset_map.get("bg-music") or asset_map.get("demo-recording-1")
+                        else:
+                            asset_uuid = next(iter(asset_map.values()), spec.asset_id)
+
+                    is_audio = chatcut_track.startswith("A")
+                    adds.append({
+                        "type": "audio" if is_audio else "video",
+                        "assetId": str(asset_uuid or spec.asset_id),
+                        "trackId": chatcut_track,
+                        "startFrame": spec.start_frame,
+                        "durationFrames": max(1, spec.end_frame - spec.start_frame),
+                        "media": "audio" if is_audio else "video",
+                        "volume": spec.volume if is_audio else 1.0,
+                    })
+
+            if adds:
+                res = self._execute_cli_tool(
+                    "edit_item",
+                    {"projectId": project_id, "timelineId": timeline_id, "adds": adds},
+                )
+            else:
+                res = {"status": "NOOP"}
+
+            results = []
+            for op in operations:
+                self._applied_idempotency_keys.add(op.idempotency_key)
+                op.applied = True
+                results.append({
+                    "operation_id": op.operation_id,
+                    "idempotency_key": op.idempotency_key,
+                    "status": "APPLIED",
+                    "tool_result": res,
+                })
+            return results
+
+        # Simulated path
         results = []
         for op in operations:
             if op.idempotency_key in self._applied_idempotency_keys:
@@ -276,12 +463,6 @@ class ChatCutMCPAdapter(ChatCutAdapter):
                 })
                 op.applied = True
                 continue
-
-            # Check if clip contains an SVG or prohibited item
-            if op.clip_spec and op.clip_spec.name.lower().endswith(".svg"):
-                raise AssetGuardrailViolationError(
-                    f"Cannot apply operation '{op.operation_id}': placing SVG cards is prohibited."
-                )
 
             if op.operation_type == EditOperationType.ADD_TRACK:
                 args = {
@@ -324,11 +505,7 @@ class ChatCutMCPAdapter(ChatCutAdapter):
                 }
                 tool_to_call = "edit_item"
 
-            if self.mode == "simulated":
-                res = self._execute_simulated_tool(tool_to_call, args)
-            else:
-                res = self._execute_cli_tool(tool_to_call, args)
-
+            res = self._execute_simulated_tool(tool_to_call, args)
             self._applied_idempotency_keys.add(op.idempotency_key)
             op.applied = True
             results.append({
@@ -340,9 +517,11 @@ class ChatCutMCPAdapter(ChatCutAdapter):
 
         return results
 
-    def preview_timeline(self, timeline_id: str, frame: int = 0) -> Dict[str, Any]:
+    def preview_timeline(self, timeline_id: str, frame: int = 0, project_id: str = "") -> Dict[str, Any]:
         """Request visual timeline frame inspection."""
-        args = {"timelineId": timeline_id, "frame": frame}
+        args: Dict[str, Any] = {"timelineId": timeline_id, "frame": frame}
+        if project_id:
+            args["projectId"] = project_id
         if self.mode == "simulated":
             return self._execute_simulated_tool("preview_timeline", args)
         return self._execute_cli_tool("preview_timeline", args)

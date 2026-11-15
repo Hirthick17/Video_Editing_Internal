@@ -28,10 +28,27 @@ FPS = 30
 TOTAL_FRAMES = 900
 FONT_DIR = Path(__file__).parent.parent.parent / "assets" / "fonts"
 INTER_FONT = FONT_DIR / "Inter-Variable.ttf"
-FFMPEG_BIN = Path(
-    r"C:\Users\hirth\AppData\Local\Programs\ChatCut\resources"
-    r"\app.asar.unpacked\node_modules\ffmpeg-ffprobe-static\ffmpeg.exe"
-)
+def _resolve_ffmpeg_bin() -> Path:
+    local_app = os.environ.get("LOCALAPPDATA", "")
+    if local_app:
+        candidate = (
+            Path(local_app)
+            / "Programs"
+            / "ChatCut"
+            / "resources"
+            / "app.asar.unpacked"
+            / "node_modules"
+            / "ffmpeg-ffprobe-static"
+            / "ffmpeg.exe"
+        )
+        if candidate.exists():
+            return candidate
+    system_ffmpeg = shutil.which("ffmpeg")
+    if system_ffmpeg:
+        return Path(system_ffmpeg)
+    return Path("ffmpeg")
+
+FFMPEG_BIN = _resolve_ffmpeg_bin()
 
 # Brand palette
 COLOR_BG_DARK = (7, 10, 14, 230)        # Obsidian dark overlay

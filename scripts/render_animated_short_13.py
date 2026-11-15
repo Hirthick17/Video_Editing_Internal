@@ -16,25 +16,10 @@ from app.services.render_engine import (
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
 
-# Resolve media paths with local repository first, then machine fallback
+# Resolve media paths from repository
 DEMO = ROOT_DIR / "assets" / "sample-media" / "demo-recording-1.mp4"
-if not DEMO.exists():
-    _dev_demo = Path(r"C:\Users\hirth\TellOS\PG_Automation\Ecommerce\research\tell-os-remotion-project\public\demo-recording-1.mp4")
-    if _dev_demo.exists():
-        DEMO = _dev_demo
-
 BROLL = ROOT_DIR / "assets" / "sample-media" / "broll-spreadsheet.mp4"
-if not BROLL.exists():
-    _dev_broll = Path(r"c:\Users\hirth\hirthick-professional\video-editor\broll-spreadsheet.mp4")
-    if _dev_broll.exists():
-        BROLL = _dev_broll
-
 MUSIC = ROOT_DIR / "assets" / "sample-media" / "bg-music.mp3"
-if not MUSIC.exists():
-    _dev_music = Path(r"c:\Users\hirth\hirthick-professional\video-editor\bg-music.mp3")
-    if _dev_music.exists():
-        MUSIC = _dev_music
-
 OUTPUT = ROOT_DIR / "reports" / "short-13-final-render.mp4"
 
 print("=" * 60)

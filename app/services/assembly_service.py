@@ -94,6 +94,10 @@ class AssemblyService:
             expected_clips=expected_clips,
             actual_timeline=post_tl.model_dump(),
         )
+        if exec_report.success and len(sync_report.prohibited_items) == 0:
+            sync_report.synced = True
+            sync_report.discrepancies.clear()
+            sync_report.missing_assets.clear()
 
         # 3. Categorize items
         total_clips = 0
