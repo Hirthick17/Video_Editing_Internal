@@ -5,7 +5,7 @@ import os
 import subprocess
 import tempfile
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from app.integrations.chatcut.adapter_interface import ChatCutAdapter
 from app.services.asset_guardrail import AssetGuardrailService, AssetGuardrailViolationError

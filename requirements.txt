@@ -11,6 +11,13 @@ pydantic-settings>=2.7.0
 Pillow>=11.0.0
 numpy>=2.0.0
 
+# Web Services & API Server
+fastapi>=0.115.0
+uvicorn>=0.32.0
+
+# Excel & Data Processing
+openpyxl>=3.1.0
+
 # Testing Framework
 pytest>=8.0.0
 
