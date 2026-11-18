@@ -1,0 +1,41 @@
+{
+  "job_id": "pilot_hirthick_v03_01",
+  "project_id": "proj_hirthick_v03_01",
+  "timeline_id": "tl_proj_hirthick_v03_01",
+  "status": "DONE",
+  "state_version": 9,
+  "raw_clip_sha256": "42b353c14c69940cf0cf2f37e3490baace9ad9254a83f6ab3e0bf6f596346c21",
+  "pre_edit_revision": "e3b0c44298fc1c14",
+  "post_edit_revision": "4d652d46e849b9a2",
+  "rollback_checkpoint": "dup_proj_hirthick_v03_01",
+  "total_cuts": 5,
+  "total_captions": 15,
+  "sfx_cues_placed": 7,
+  "music_tracks_placed": 1,
+  "broll_candidates_in_bin": 4,
+  "measured_polish_minutes": 24.5,
+  "target_polish_minutes": 30.0,
+  "baseline_polish_minutes": 390.0,
+  "time_saved_minutes": 365.5,
+  "target_achieved": true,
+  "handoff_report": {
+    "job_id": "pilot_hirthick_v03_01",
+    "project_id": "proj_hirthick_v03_01",
+    "timeline_id": "tl_proj_hirthick_v03_01",
+    "post_edit_revision": "4d652d46e849b9a2",
+    "rollback_checkpoint": "dup_proj_hirthick_v03_01",
+    "applied_operations_count": 30,
+    "broll_candidates_in_bin": 4,
+    "target_polish_minutes": 30.0,
+    "baseline_polish_minutes": 390.0,
+    "status": "READY_FOR_OWNER_POLISH",
+    "checklist": [
+      "Inspect A-roll jump cuts on track V1",
+      "Review Inter captions and purple highlight emphasis",
+      "Listen to music ducking and SFX hits",
+      "Optionally drag candidate B-roll clips from Assets Bin to V2",
+      "Perform final trimming and export Short"
+    ]
+  },
+  "created_at": "2026-11-18T14:01:56.768973+00:00"
+}

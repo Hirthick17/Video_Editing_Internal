@@ -202,6 +202,7 @@ class PatternAStateMachine:
 
     def _ensure_job_record_exists(self) -> None:
         """Persist initial job row if not already in SQLite jobs table."""
+        self.db.initialize_schema()
         with self.db.transaction() as conn:
             cursor = conn.execute("SELECT job_id FROM jobs WHERE job_id = ?", (self.state.job_id,))
             if cursor.fetchone() is None:
