@@ -32,4 +32,6 @@ Thumbs.db
 # Temporary renders and logs
 *.tmp
 *.log
+~$*.xlsx
+reports/reports/
 

@@ -7,6 +7,7 @@ from app.state.enums import (
     AssetType,
     ReviewStatus,
     CritiqueAspect,
+    PatternAState,
 )
 from app.state.models import (
     AssetRecord,
@@ -31,6 +32,7 @@ __all__ = [
     "AssetType",
     "ReviewStatus",
     "CritiqueAspect",
+    "PatternAState",
     "AssetRecord",
     "ScriptRecord",
     "ShotPlanRecord",

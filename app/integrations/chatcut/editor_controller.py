@@ -7,8 +7,10 @@ from app.integrations.chatcut.adapter_interface import ChatCutAdapter
 from app.integrations.chatcut.editor_lock import EditorLock, EditorLockConflictError, EditorLockManager
 from app.integrations.chatcut.synchronizer import EditorStateSynchronizer, EditorSyncReport
 from app.persistence.repository import JobRepository
+from app.services.pattern_linter import PatternLinter
 from app.state.editor_contracts import ClipSpec, EditOperation
 from app.state.editor_models import EditorProject, EditorTimeline
+from app.state.pattern_spec import PatternSpec
 
 
 class EditorConflictError(Exception):
@@ -60,8 +62,18 @@ class EditorController:
         expected_revision: Optional[str] = None,
         operator_id: str = "agent_orchestrator",
         auto_rollback_on_failure: bool = True,
+        placement_mode: Optional[str] = None,
+        pattern_spec: Optional[PatternSpec] = None,
+        job_status: Optional[str] = None,
     ) -> EditorExecutionReport:
         """Execute a controlled editing batch with pre-verification, locks, and rollback guarantee."""
+
+        # 0. Check hard prohibition: never edit during owner editing
+        if job_status == "OWNER_EDITING":
+            raise EditorLockConflictError(
+                f"Cannot edit timeline '{timeline_id}': project '{project_id}' is currently in OWNER_EDITING state. "
+                "Automated edits are strictly prohibited while the owner is editing."
+            )
 
         # 1. Acquire exclusive lock
         lock = self.lock_mgr.acquire_lock(
@@ -95,7 +107,9 @@ class EditorController:
             )
 
             # 5. Apply batch operations
-            write_results = self.adapter.apply_batch_operations(timeline_id, operations, project_id=project_id)
+            write_results = self.adapter.apply_batch_operations(
+                timeline_id, operations, project_id=project_id, placement_mode=placement_mode
+            )
             applied_ids = [op.operation_id for op in operations if op.applied]
 
             # 6. Read-after-write verification
@@ -134,6 +148,30 @@ class EditorController:
                             error=f"{err_msg} -> Rolled back to checkpoint '{rollback_project_id}'.",
                         )
                     raise RuntimeError(err_msg)
+
+            # Post-batch PatternLinter verification if pattern_spec or placement_mode specified
+            if pattern_spec is not None:
+                linter_report = PatternLinter.lint_timeline(
+                    post_timeline,
+                    spec=pattern_spec,
+                    placement_mode=placement_mode or "CANDIDATES_ONLY",
+                )
+                if not linter_report.valid:
+                    lint_err = f"PatternLinter verification failed post-write: {'; '.join(v.message for v in linter_report.violations)}"
+                    if auto_rollback_on_failure and rollback_project_id:
+                        return EditorExecutionReport(
+                            success=False,
+                            project_id=project_id,
+                            timeline_id=timeline_id,
+                            pre_edit_revision=observed_revision,
+                            post_edit_revision=post_revision,
+                            rollback_project_id=rollback_project_id,
+                            applied_operations=applied_ids,
+                            reconciliation=sync_report,
+                            rolled_back=True,
+                            error=f"{lint_err} -> Rolled back to checkpoint '{rollback_project_id}'.",
+                        )
+                    raise RuntimeError(lint_err)
 
             return EditorExecutionReport(
                 success=True,

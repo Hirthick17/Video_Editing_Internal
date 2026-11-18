@@ -21,6 +21,82 @@ from app.state.editor_models import (
 from app.state.enums import AssetType, EditOperationType
 
 
+class ChatCutAllowlistViolationError(RuntimeError):
+    """Raised when an unallowed or prohibited generative/diffusion/voice tool is called."""
+    pass
+
+
+ALLOWED_CHATCUT_TOOLS = {
+    # Project operations
+    "list_projects",
+    "get_active_project",
+    "target_project",
+    "create_project",
+    "duplicate_project",
+    "delete_project",
+    # Timeline inspection & preview
+    "list_timelines",
+    "preview_timeline",
+    "get_timeline",
+    "set_active_timeline",
+    # Track management
+    "add_track",
+    "edit_track",
+    "delete_track",
+    # Item & timeline manipulation
+    "edit_item",
+    "batch_edit_items",
+    # Asset management
+    "push_asset",
+    "browse_assets",
+    "get_asset",
+    # Markers
+    "add_marker",
+    "list_markers",
+    "delete_marker",
+    # Player state
+    "get_player_state",
+    "seek",
+}
+
+PROHIBITED_CHATCUT_TOOLS = {
+    "submit_video",
+    "submit_image",
+    "submit_voice",
+    "generate_screen_from_text",
+    "generate_variants",
+    "create_design_system",
+    "create_design_system_from_design_md",
+    "apply_design_system",
+    "generate_motion_graphics",
+    "generate_speech",
+    "generate_music",
+}
+
+
+def contains_emoji(text: str) -> bool:
+    """Detect emoji characters in text strings."""
+    if not text:
+        return False
+    for ch in text:
+        code = ord(ch)
+        if (
+            0x1F600 <= code <= 0x1F64F
+            or 0x1F300 <= code <= 0x1F5FF
+            or 0x1F680 <= code <= 0x1F6FF
+            or 0x1F700 <= code <= 0x1F77F
+            or 0x1F780 <= code <= 0x1F7FF
+            or 0x1F800 <= code <= 0x1F8FF
+            or 0x1F900 <= code <= 0x1F9FF
+            or 0x1FA00 <= code <= 0x1FA6F
+            or 0x1FA70 <= code <= 0x1FAFF
+            or 0x2600 <= code <= 0x26FF
+            or 0x2700 <= code <= 0x27BF
+        ):
+            return True
+    return False
+
+
 class ChatCutMCPAdapter(ChatCutAdapter):
     """
     Adapter bridging Hirthick's Vision Studio with ChatCut MCP.
@@ -48,6 +124,12 @@ class ChatCutMCPAdapter(ChatCutAdapter):
 
     def _execute_cli_tool(self, tool_name: str, arguments: Dict[str, Any]) -> Dict[str, Any]:
         """Invoke a ChatCut tool through the official CLI with JSON file arguments."""
+        if tool_name in PROHIBITED_CHATCUT_TOOLS or tool_name not in ALLOWED_CHATCUT_TOOLS:
+            raise ChatCutAllowlistViolationError(
+                f"ChatCut tool '{tool_name}' is strictly prohibited by Pattern A allowlist. "
+                "Generative AI video/voice/diffusion and synthetic asset tools are forbidden."
+            )
+
         with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False, encoding="utf-8") as f:
             json.dump(arguments, f)
             temp_args_path = f.name
@@ -71,6 +153,8 @@ class ChatCutMCPAdapter(ChatCutAdapter):
                                 pass
                 return res
             return data
+        except ChatCutAllowlistViolationError:
+            raise
         except Exception as e:
             # Fall back safely to internal high-fidelity simulation and switch mode so that
             # remaining operations do not waste time retrying against an unmaterialized desktop project.
@@ -85,6 +169,12 @@ class ChatCutMCPAdapter(ChatCutAdapter):
 
     def _execute_simulated_tool(self, tool_name: str, args: Dict[str, Any]) -> Dict[str, Any]:
         """Deterministic simulation of ChatCut MCP tool responses matching exact schemas."""
+        if tool_name in PROHIBITED_CHATCUT_TOOLS or tool_name not in ALLOWED_CHATCUT_TOOLS:
+            raise ChatCutAllowlistViolationError(
+                f"ChatCut tool '{tool_name}' is strictly prohibited by Pattern A allowlist. "
+                "Generative AI video/voice/diffusion and synthetic asset tools are forbidden."
+            )
+
         if tool_name == "create_project":
             p_id = args.get("projectId", f"proj_{len(self._sim_projects) + 1}")
             t_id = f"tl_{p_id}"
@@ -369,17 +459,43 @@ class ChatCutMCPAdapter(ChatCutAdapter):
         timeline_id: str,
         operations: List[EditOperation],
         project_id: str = "",
+        placement_mode: Optional[str] = None,
     ) -> List[Dict[str, Any]]:
         """
         Apply a batch of edit operations with idempotency tracking.
         Duplicate calls with the same idempotency key are skipped.
         """
-        # Prohibit SVGs
+        # Validate hard prohibitions
         for op in operations:
             if op.clip_spec and op.clip_spec.name.lower().endswith(".svg"):
                 raise AssetGuardrailViolationError(
                     f"Cannot apply operation '{op.operation_id}': placing SVG cards is prohibited."
                 )
+
+            # Emoji check
+            text_val = ""
+            if op.parameters and "text" in op.parameters:
+                text_val = str(op.parameters["text"])
+            elif op.clip_spec and op.clip_spec.name:
+                text_val = op.clip_spec.name
+
+            if text_val and contains_emoji(text_val):
+                raise AssetGuardrailViolationError(
+                    f"Cannot apply operation '{op.operation_id}': emoji characters inside caption or text strings "
+                    f"('{text_val}') are strictly prohibited."
+                )
+
+            # Stock B-roll placement check
+            if placement_mode == "CANDIDATES_ONLY":
+                t_id = (op.track_id or (op.clip_spec.track_id if op.clip_spec else "")).upper()
+                if t_id.startswith("V"):
+                    c_name = (op.clip_spec.name if op.clip_spec else "").lower()
+                    c_asset = (op.clip_spec.asset_id if op.clip_spec else "").lower()
+                    if "stock" in c_name or "broll" in c_name or "stock" in c_asset or "broll" in c_asset:
+                        raise AssetGuardrailViolationError(
+                            f"Cannot apply operation '{op.operation_id}': placing stock B-roll '{c_name}' on visual track '{t_id}' "
+                            "is prohibited while placement_mode='CANDIDATES_ONLY'. Candidates must remain in project assets bin."
+                        )
 
         if self.mode == "live" and project_id:
             asset_map = self._get_live_asset_map(project_id)

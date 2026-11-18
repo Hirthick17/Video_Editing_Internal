@@ -66,3 +66,19 @@ class EditOperationType(str, Enum):
     ADD_TRANSITION = "ADD_TRANSITION"
     ADD_CAPTION = "ADD_CAPTION"
 
+
+class PatternAState(str, Enum):
+    """Explicit state machine lifecycle for Pattern A."""
+    INTAKE = "INTAKE"
+    ANALYSING = "ANALYSING"
+    PLANNED = "PLANNED"
+    WAITING_OWNER = "WAITING_OWNER"
+    ASSETS_READY = "ASSETS_READY"
+    APPLYING = "APPLYING"
+    HANDED_OFF = "HANDED_OFF"
+    OWNER_EDITING = "OWNER_EDITING"
+    DONE = "DONE"
+    BLOCKED = "BLOCKED"
+    FAILED = "FAILED"
+
+

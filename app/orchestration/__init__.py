@@ -13,6 +13,13 @@ from app.orchestration.nodes import (
     validate_project_metadata,
 )
 from app.orchestration.routing import route_after_approval, route_after_validation, should_retry
+from app.orchestration.state_machine import (
+    InvalidStateTransitionError,
+    PatternAJobState,
+    PatternAStateBlockedError,
+    PatternAStateMachine,
+    RawClipRecord,
+)
 
 __all__ = [
     "build_production_graph",
@@ -29,5 +36,10 @@ __all__ = [
     "route_after_validation",
     "route_after_approval",
     "should_retry",
+    "PatternAStateMachine",
+    "PatternAJobState",
+    "RawClipRecord",
+    "InvalidStateTransitionError",
+    "PatternAStateBlockedError",
 ]
 

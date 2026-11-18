@@ -45,6 +45,7 @@ class ChatCutAdapter(ABC):
         timeline_id: str,
         operations: List[EditOperation],
         project_id: str = "",
+        placement_mode: Optional[str] = None,
     ) -> List[Dict[str, Any]]:
         """Apply a batch of editing operations idempotently."""
         pass
@@ -116,6 +117,7 @@ class StubChatCutAdapter(ChatCutAdapter):
         timeline_id: str,
         operations: List[EditOperation],
         project_id: str = "",
+        placement_mode: Optional[str] = None,
     ) -> List[Dict[str, Any]]:
         results = []
         for op in operations:
