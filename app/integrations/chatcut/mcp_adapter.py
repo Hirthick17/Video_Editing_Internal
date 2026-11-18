@@ -1,6 +1,7 @@
-"""Production-ready ChatCut MCP adapter supporting CLI/stdio transport and deterministic simulation."""
+"""Production-ready ChatCut MCP adapter supporting named-pipe transport and deterministic simulation."""
 
 import json
+import logging
 import os
 import subprocess
 import tempfile
@@ -19,6 +20,8 @@ from app.state.editor_models import (
     normalize_chatcut_timeline,
 )
 from app.state.enums import AssetType, EditOperationType
+
+logger = logging.getLogger("chatcut_mcp_adapter")
 
 
 class ChatCutAllowlistViolationError(RuntimeError):
@@ -100,13 +103,21 @@ def contains_emoji(text: str) -> bool:
 class ChatCutMCPAdapter(ChatCutAdapter):
     """
     Adapter bridging Hirthick's Vision Studio with ChatCut MCP.
-    Communicates via @chatcut/cli or falls back to internal simulation for safe testing.
+    Communicates via chatcut-mcp.cmd named-pipe transport or falls back to internal simulation for safe testing.
     """
 
-    def __init__(self, mode: str = "auto", cli_executable: str = "npx @chatcut/cli"):
+    def __init__(self, mode: str = "auto", cli_executable: Optional[str] = None):
         self.mode = mode  # "auto", "live", "simulated"
-        self.cli_executable = cli_executable
+        self._original_mode = mode  # preserve for diagnostics
+        # Resolve CLI executable: prefer explicit path, then env var, then default chatcut-mcp.cmd
+        if cli_executable:
+            self.cli_executable = cli_executable
+        else:
+            appdata = os.environ.get("APPDATA", "")
+            default_mcp_cmd = str(Path(appdata) / "ChatCut" / "chatcut-mcp.cmd") if appdata else ""
+            self.cli_executable = os.environ.get("HVS_CHATCUT_MCP_CMD", default_mcp_cmd)
         self._connected = True
+        self._fallback_warned = False
         # In-memory storage for simulated mode
         self._sim_projects: Dict[str, Dict[str, Any]] = {}
         self._sim_timelines: Dict[str, Dict[str, Any]] = {}
@@ -123,49 +134,194 @@ class ChatCutMCPAdapter(ChatCutAdapter):
         return self._connected
 
     def _execute_cli_tool(self, tool_name: str, arguments: Dict[str, Any]) -> Dict[str, Any]:
-        """Invoke a ChatCut tool through the official CLI with JSON file arguments."""
+        """Invoke a ChatCut tool through the MCP stdio server (JSON-RPC over stdin/stdout)."""
         if tool_name in PROHIBITED_CHATCUT_TOOLS or tool_name not in ALLOWED_CHATCUT_TOOLS:
             raise ChatCutAllowlistViolationError(
                 f"ChatCut tool '{tool_name}' is strictly prohibited by Pattern A allowlist. "
                 "Generative AI video/voice/diffusion and synthetic asset tools are forbidden."
             )
 
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False, encoding="utf-8") as f:
-            json.dump(arguments, f)
-            temp_args_path = f.name
+        # Verify MCP command exists before attempting
+        mcp_cmd_path = Path(self.cli_executable)
+        if not mcp_cmd_path.exists():
+            msg = (
+                f"ChatCut MCP command not found at '{self.cli_executable}'. "
+                "Ensure ChatCut Desktop is installed and chatcut-mcp.cmd exists at "
+                "%APPDATA%\\ChatCut\\chatcut-mcp.cmd"
+            )
+            if self.mode == "live":
+                raise RuntimeError(msg)
+            logger.warning("MCP command missing — falling back to simulated mode: %s", msg)
+            self.mode = "simulated"
+            self._log_fallback(tool_name, msg)
+            return self._execute_simulated_tool(tool_name, arguments)
 
         try:
-            cmd = f"{self.cli_executable} tools call {tool_name} --args-file \"{temp_args_path}\" --json"
-            result = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=45)
-            if result.returncode != 0:
-                if "conflicts with item" in result.stdout or "already exists" in result.stdout:
-                    return {"status": "ALREADY_PLACED", "detail": "Items already exist on timeline"}
-                raise RuntimeError(f"ChatCut tool '{tool_name}' failed: {result.stderr.strip() or result.stdout.strip()}")
-            data = json.loads(result.stdout)
-            if isinstance(data, dict) and "result" in data:
-                res = data["result"]
-                if isinstance(res, dict) and "content" in res:
-                    for item in res.get("content", []):
-                        if isinstance(item, dict) and item.get("type") == "text":
-                            try:
-                                return json.loads(item["text"])
-                            except Exception:
-                                pass
-                return res
-            return data
+            logger.info("ChatCut MCP call: %s (args=%s)", tool_name, json.dumps(arguments)[:200])
+            result = self._mcp_stdio_call(tool_name, arguments)
+            logger.info("ChatCut MCP result for '%s': %s", tool_name, json.dumps(result)[:300])
+            return result
+
         except ChatCutAllowlistViolationError:
             raise
         except Exception as e:
-            # Fall back safely to internal high-fidelity simulation and switch mode so that
-            # remaining operations do not waste time retrying against an unmaterialized desktop project.
+            if self.mode == "live":
+                raise RuntimeError(
+                    f"ChatCut live MCP call failed for '{tool_name}': {e}. "
+                    "Ensure ChatCut Desktop is running and the MCP named pipe is active."
+                ) from e
+            self._log_fallback(tool_name, str(e))
             self.mode = "simulated"
             return self._execute_simulated_tool(tool_name, arguments)
+
+    def _mcp_stdio_call(self, tool_name: str, arguments: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Execute a single MCP tool call using the stdio transport protocol.
+        Launches chatcut-mcp.cmd, performs the JSON-RPC handshake, sends the tool call,
+        reads the response, and closes the process.
+        """
+        import time
+
+        proc = subprocess.Popen(
+            f'"{self.cli_executable}"',
+            shell=True,
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+
+        try:
+            # Step 1: Send initialize request
+            init_req = json.dumps({
+                "jsonrpc": "2.0",
+                "id": 1,
+                "method": "initialize",
+                "params": {
+                    "protocolVersion": "2024-11-05",
+                    "capabilities": {},
+                    "clientInfo": {"name": "HirthicksVisionStudio", "version": "0.3.0"}
+                }
+            }) + "\n"
+            proc.stdin.write(init_req)
+            proc.stdin.flush()
+
+            # Read initialize response
+            init_resp = self._read_jsonrpc_response(proc.stdout, expected_id=1, timeout=15)
+            if not init_resp:
+                raise RuntimeError("MCP server did not respond to initialize")
+
+            # Step 2: Send initialized notification
+            init_notif = json.dumps({
+                "jsonrpc": "2.0",
+                "method": "notifications/initialized"
+            }) + "\n"
+            proc.stdin.write(init_notif)
+            proc.stdin.flush()
+
+            # Brief pause to let server process notification
+            time.sleep(0.1)
+
+            # Step 3: Send tool call
+            tool_req = json.dumps({
+                "jsonrpc": "2.0",
+                "id": 2,
+                "method": "tools/call",
+                "params": {
+                    "name": tool_name,
+                    "arguments": arguments
+                }
+            }) + "\n"
+            proc.stdin.write(tool_req)
+            proc.stdin.flush()
+
+            # Read tool call response
+            tool_resp = self._read_jsonrpc_response(proc.stdout, expected_id=2, timeout=30)
+            if not tool_resp:
+                raise RuntimeError(f"MCP server did not respond to tools/call for '{tool_name}'")
+
+            # Check for JSON-RPC error
+            if "error" in tool_resp:
+                err = tool_resp["error"]
+                err_msg = err.get("message", str(err)) if isinstance(err, dict) else str(err)
+                if "conflicts with item" in err_msg or "already exists" in err_msg:
+                    return {"status": "ALREADY_PLACED", "detail": "Items already exist on timeline"}
+                raise RuntimeError(f"ChatCut tool '{tool_name}' returned error: {err_msg}")
+
+            # Extract result content
+            result = tool_resp.get("result", {})
+            if isinstance(result, dict) and "content" in result:
+                for item in result.get("content", []):
+                    if isinstance(item, dict) and item.get("type") == "text":
+                        try:
+                            return json.loads(item["text"])
+                        except (json.JSONDecodeError, ValueError):
+                            pass
+                return result
+
+            return result if result else tool_resp
+
         finally:
-            if os.path.exists(temp_args_path):
-                try:
-                    os.remove(temp_args_path)
-                except OSError:
-                    pass
+            try:
+                proc.stdin.close()
+            except Exception:
+                pass
+            try:
+                proc.terminate()
+                proc.wait(timeout=5)
+            except Exception:
+                proc.kill()
+
+    def _read_jsonrpc_response(self, stdout, expected_id: int, timeout: float = 15) -> Optional[Dict]:
+        """Read lines from stdout until we find a JSON-RPC response with the expected id."""
+        import select
+        import time
+
+        deadline = time.time() + timeout
+        buffer = ""
+
+        while time.time() < deadline:
+            # Read available data
+            try:
+                line = stdout.readline()
+            except Exception:
+                break
+
+            if not line:
+                # EOF or no data
+                time.sleep(0.05)
+                continue
+
+            line = line.strip()
+            if not line:
+                continue
+
+            try:
+                msg = json.loads(line)
+                if isinstance(msg, dict):
+                    # Check if this is the response we're looking for
+                    if msg.get("id") == expected_id:
+                        return msg
+                    # Skip notifications and other responses
+                    continue
+            except (json.JSONDecodeError, ValueError):
+                continue
+
+        return None
+
+    def _log_fallback(self, tool_name: str, reason: str) -> None:
+        """Log a highly visible warning when falling back from live to simulated mode."""
+        if not self._fallback_warned:
+            logger.warning(
+                "⚠️  CHATCUT FALLBACK: Switching from '%s' to simulated mode. "
+                "Tool '%s' failed: %s. "
+                "All subsequent operations will run in-memory only — "
+                "NO real ChatCut project will be created on disk.",
+                self._original_mode, tool_name, reason
+            )
+            self._fallback_warned = True
+        else:
+            logger.warning("ChatCut simulated fallback for tool '%s': %s", tool_name, reason)
 
     def _execute_simulated_tool(self, tool_name: str, args: Dict[str, Any]) -> Dict[str, Any]:
         """Deterministic simulation of ChatCut MCP tool responses matching exact schemas."""
@@ -319,62 +475,114 @@ class ChatCutMCPAdapter(ChatCutAdapter):
 
     def discover_active_project(self) -> Tuple[str, str]:
         """
-        Discover the active project ID and timeline ID from ChatCut Desktop or fallback.
+        Discover the active project ID and timeline ID from ChatCut Desktop.
+        In simulated mode, creates a new project. In live/auto mode, queries the running desktop.
         """
-        if self.mode == "live":
-            try:
-                active_raw = self._execute_cli_tool("get_active_project", {})
-                p_id = ""
-                if isinstance(active_raw, dict):
-                    p_id = active_raw.get("projectId", "")
-                    if not p_id and "content" in active_raw:
-                        for c in active_raw.get("content", []):
+        if self.mode == "simulated":
+            # Create a fresh simulated project instead of returning a fake hardcoded ID
+            p_id = f"sim_proj_{len(self._sim_projects) + 1}"
+            result = self._execute_simulated_tool("create_project", {
+                "projectId": p_id,
+                "name": "Pilot Short: Pattern A"
+            })
+            tl_id = result.get("timeline", {}).get("timelineId", f"tl_{p_id}")
+            logger.info("Simulated project created: %s / %s", p_id, tl_id)
+            return (p_id, tl_id)
+
+        # Live / Auto mode: query ChatCut Desktop via MCP
+        try:
+            # First try get_active_project
+            active_raw = self._execute_cli_tool("get_active_project", {})
+            p_id = ""
+            if isinstance(active_raw, dict):
+                p_id = active_raw.get("projectId", "")
+                if not p_id and "content" in active_raw:
+                    for c in active_raw.get("content", []):
+                        if isinstance(c, dict) and c.get("type") == "text":
+                            try:
+                                p = json.loads(c["text"])
+                                if "projectId" in p:
+                                    p_id = p["projectId"]
+                                    break
+                            except Exception:
+                                pass
+
+            # If no active project, list all and pick the most recent
+            if not p_id:
+                projects_raw = self._execute_cli_tool("list_projects", {})
+                projs = []
+                if isinstance(projects_raw, dict):
+                    projs = projects_raw.get("projects", [])
+                    if not projs and "content" in projects_raw:
+                        for c in projects_raw.get("content", []):
                             if isinstance(c, dict) and c.get("type") == "text":
                                 try:
                                     p = json.loads(c["text"])
-                                    if "projectId" in p:
-                                        p_id = p["projectId"]
+                                    if "projects" in p:
+                                        projs = p["projects"]
                                         break
                                 except Exception:
                                     pass
-                if not p_id:
-                    projects_raw = self._execute_cli_tool("list_projects", {})
-                    projs = []
-                    if isinstance(projects_raw, dict):
-                        projs = projects_raw.get("projects", [])
-                        if not projs and "content" in projects_raw:
-                            for c in projects_raw.get("content", []):
-                                if isinstance(c, dict) and c.get("type") == "text":
-                                    try:
-                                        p = json.loads(c["text"])
-                                        if "projects" in p:
-                                            projs = p["projects"]
-                                            break
-                                    except Exception:
-                                        pass
-                    if projs:
-                        p_id = projs[0].get("projectId", "")
+                elif isinstance(projects_raw, list):
+                    projs = projects_raw
+                if projs:
+                    p_id = projs[0].get("projectId", "")
+                    logger.info("Selected first available project: %s", p_id)
 
-                if p_id:
-                    target_res = self._execute_cli_tool("target_project", {"projectId": p_id, "openWindow": True})
-                    tl_id = ""
-                    if isinstance(target_res, dict):
-                        tl_id = target_res.get("timelineId") or target_res.get("activeTimelineId", "")
-                        if not tl_id and "content" in target_res:
-                            for c in target_res.get("content", []):
-                                if isinstance(c, dict) and c.get("type") == "text":
-                                    try:
-                                        t = json.loads(c["text"])
-                                        if "timelineId" in t:
-                                            tl_id = t["timelineId"]
-                                            break
-                                    except Exception:
-                                        pass
-                    return (p_id, tl_id)
-            except Exception:
-                pass
+            if not p_id:
+                # No projects exist — create one via MCP
+                logger.info("No ChatCut projects found. Creating a new project via MCP...")
+                create_result = self._execute_cli_tool("create_project", {
+                    "name": "Hirthick Vision Studio - Pattern A"
+                })
+                if isinstance(create_result, dict):
+                    p_id = create_result.get("projectId", "")
+                    if not p_id:
+                        proj_data = create_result.get("project", {})
+                        p_id = proj_data.get("projectId", "") if isinstance(proj_data, dict) else ""
 
-        return ("0b8ee945-3b8f-4cfa-b22f-7e35a2694f29", "57d9e800-0af3-4565-993b-5ad8ba624239")
+            if p_id:
+                target_res = self._execute_cli_tool("target_project", {"projectId": p_id, "openWindow": True})
+                tl_id = ""
+                if isinstance(target_res, dict):
+                    tl_id = target_res.get("timelineId") or target_res.get("activeTimelineId", "")
+                    if not tl_id and "content" in target_res:
+                        for c in target_res.get("content", []):
+                            if isinstance(c, dict) and c.get("type") == "text":
+                                try:
+                                    t = json.loads(c["text"])
+                                    if "timelineId" in t:
+                                        tl_id = t["timelineId"]
+                                        break
+                                except Exception:
+                                    pass
+                    # Also check nested timelines array
+                    if not tl_id:
+                        timelines = target_res.get("timelines", [])
+                        if timelines and isinstance(timelines[0], dict):
+                            tl_id = timelines[0].get("timelineId", "")
+                logger.info("Discovered ChatCut project: %s / timeline: %s", p_id, tl_id)
+                return (p_id, tl_id)
+
+        except Exception as e:
+            logger.error("Failed to discover ChatCut project: %s", e)
+            if self.mode == "live":
+                raise RuntimeError(
+                    f"Cannot discover ChatCut project in live mode: {e}. "
+                    "Ensure ChatCut Desktop is running with at least one project open."
+                ) from e
+
+        # Auto mode fallback: create a simulated project
+        logger.warning("Auto mode: could not discover a live project, falling back to simulated.")
+        self.mode = "simulated"
+        self._log_fallback("discover_active_project", "No live project found")
+        p_id = f"sim_proj_{len(self._sim_projects) + 1}"
+        result = self._execute_simulated_tool("create_project", {
+            "projectId": p_id,
+            "name": "Pilot Short: Pattern A (Auto-Simulated)"
+        })
+        tl_id = result.get("timeline", {}).get("timelineId", f"tl_{p_id}")
+        return (p_id, tl_id)
 
     def _get_live_asset_map(self, project_id: str) -> Dict[str, str]:
         """Fetch assets currently ingested in ChatCut Desktop project."""

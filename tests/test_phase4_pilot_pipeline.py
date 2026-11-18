@@ -33,8 +33,9 @@ def pilot_clip_path():
 def test_pilot_pipeline_end_to_end(pilot_clip_path: str):
     """
     Test complete Phase 4 Pilot Video pipeline execution from raw clip to verified ChatCut handoff.
+    Uses simulated MCP mode for deterministic test isolation.
     """
-    runner = PilotPipelineRunner()
+    runner = PilotPipelineRunner(mcp_mode="simulated")
 
     result: PilotPipelineResult = runner.run_pilot(
         raw_clip_path=pilot_clip_path,

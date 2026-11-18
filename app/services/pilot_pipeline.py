@@ -67,9 +67,10 @@ class PilotPipelineRunner:
         adapter: Optional[ChatCutAdapter] = None,
         audio_service: Optional[AudioLibraryService] = None,
         stock_service: Optional[StockSourcingService] = None,
+        mcp_mode: str = "auto",
     ):
         self.db = db_manager or default_db_manager
-        self.adapter = adapter or ChatCutMCPAdapter(mode="simulated")
+        self.adapter = adapter or ChatCutMCPAdapter(mode=mcp_mode)
         self.audio_svc = audio_service or AudioLibraryService()
         self.stock_svc = stock_service or StockSourcingService()
         self.lock_mgr = EditorLockManager(self.db)
@@ -244,9 +245,16 @@ class PilotPipelineRunner:
         )
 
         # 6. ChatCut MCP Execution
-        # Ensure project exists in ChatCut
-        self.adapter._execute_simulated_tool("create_project", {"projectId": project_id, "name": "Pilot Short: Stop Building Alone"})
-        timeline_id = f"tl_{project_id}"
+        # Ensure project exists in ChatCut (uses live or simulated based on adapter mode)
+        adapter_mode = getattr(self.adapter, 'mode', 'simulated')
+        if adapter_mode == "simulated":
+            self.adapter._execute_simulated_tool("create_project", {"projectId": project_id, "name": "Pilot Short: Stop Building Alone"})
+            timeline_id = f"tl_{project_id}"
+        else:
+            # In live/auto mode, discover or create a real ChatCut project
+            project_id, timeline_id = self.adapter.discover_active_project()
+            if not timeline_id:
+                timeline_id = f"tl_{project_id}"
 
         # Push B-roll candidates into project bin
         self.stock_svc.ingest_candidates_to_chatcut_bin(all_candidates, adapter=self.adapter, project_id=project_id)

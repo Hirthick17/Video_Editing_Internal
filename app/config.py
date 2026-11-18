@@ -1,5 +1,6 @@
 """Application configuration and filesystem paths."""
 
+import os
 from pathlib import Path
 from pydantic_settings import BaseSettings
 
@@ -20,6 +21,11 @@ class Settings(BaseSettings):
     default_height: int = 1920
     max_node_retries: int = 3
     max_critique_rounds: int = 2
+
+    # ChatCut MCP integration
+    chatcut_mcp_cmd: Path = Path(os.environ.get("APPDATA", "")) / "ChatCut" / "chatcut-mcp.cmd"
+    chatcut_projects_dir: Path = Path(os.environ.get("APPDATA", "")) / "ChatCut" / "projects"
+    chatcut_default_mode: str = "live"  # "live", "simulated", "auto"
 
     class Config:
         env_prefix = "HVS_"

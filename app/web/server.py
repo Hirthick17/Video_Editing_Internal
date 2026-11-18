@@ -496,7 +496,7 @@ def api_get_status():
 
 
 class RunRequest(BaseModel):
-    mcp_mode: str = "simulated"  # "simulated" or "live"
+    mcp_mode: str = "live"  # "live", "simulated", or "auto"
     run_render: bool = False
     operator_name: str = "Hirthick Operator"
 
@@ -637,6 +637,58 @@ def api_open_chatcut_project():
         return {"status": "opened", "projectId": proj_id, "timelineId": tl_id, "detail": result}
     except Exception as e:
         return {"status": "error", "detail": str(e)}
+
+
+@app.get("/api/chatcut/diagnostics")
+def api_chatcut_diagnostics():
+    """Live diagnostics: verify MCP command, named pipe, ChatCut Desktop process, and project discovery."""
+    diag = {"checks": [], "overall": "UNKNOWN"}
+
+    # Check 1: ChatCut Desktop running
+    chatcut_info = get_chatcut_status()
+    diag["checks"].append({
+        "name": "ChatCut Desktop Process",
+        "status": "PASS" if chatcut_info["is_running"] else "FAIL",
+        "detail": f"{len(chatcut_info['process_ids'])} processes" if chatcut_info["is_running"] else "Not running",
+    })
+
+    # Check 2: MCP command exists
+    diag["checks"].append({
+        "name": "MCP Command (chatcut-mcp.cmd)",
+        "status": "PASS" if chatcut_info["mcp_cmd_exists"] else "FAIL",
+        "detail": chatcut_info.get("mcp_cmd_path", "Not found"),
+    })
+
+    # Check 3: Try to list projects via live MCP
+    try:
+        adapter = ChatCutMCPAdapter(mode="live")
+        proj_id, tl_id = adapter.discover_active_project()
+        diag["checks"].append({
+            "name": "MCP Project Discovery",
+            "status": "PASS" if proj_id else "FAIL",
+            "detail": f"Project: {proj_id}, Timeline: {tl_id}",
+        })
+        diag["active_project_id"] = proj_id
+        diag["active_timeline_id"] = tl_id
+    except Exception as e:
+        diag["checks"].append({
+            "name": "MCP Project Discovery",
+            "status": "FAIL",
+            "detail": str(e),
+        })
+
+    # Check 4: Tools cache
+    diag["checks"].append({
+        "name": "MCP Tools Available",
+        "status": "PASS" if chatcut_info["tool_count"] > 0 else "FAIL",
+        "detail": f"{chatcut_info['tool_count']} tools cached",
+    })
+
+    all_pass = all(c["status"] == "PASS" for c in diag["checks"])
+    diag["overall"] = "HEALTHY" if all_pass else "DEGRADED"
+    diag["chatcut_version"] = chatcut_info.get("version", "unknown")
+
+    return diag
 
 
 # ----------------------------------------------------------------------------
