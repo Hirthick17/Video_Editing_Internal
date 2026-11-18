@@ -189,6 +189,8 @@ class ChatCutMCPAdapter(ChatCutAdapter):
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
+            encoding="utf-8",
+            errors="replace",
         )
 
         try:
@@ -207,9 +209,18 @@ class ChatCutMCPAdapter(ChatCutAdapter):
             proc.stdin.flush()
 
             # Read initialize response
-            init_resp = self._read_jsonrpc_response(proc.stdout, expected_id=1, timeout=15)
+            init_resp = self._read_jsonrpc_response(proc, expected_id=1, timeout=15)
             if not init_resp:
-                raise RuntimeError("MCP server did not respond to initialize")
+                # Capture stderr if available
+                poll = proc.poll()
+                stderr_text = ""
+                try:
+                    stderr_text = proc.stderr.read()
+                except Exception:
+                    pass
+                raise RuntimeError(
+                    f"MCP server did not respond to initialize (proc exit={poll}, stderr='{stderr_text[:500]}')"
+                )
 
             # Step 2: Send initialized notification
             init_notif = json.dumps({
@@ -236,9 +247,17 @@ class ChatCutMCPAdapter(ChatCutAdapter):
             proc.stdin.flush()
 
             # Read tool call response
-            tool_resp = self._read_jsonrpc_response(proc.stdout, expected_id=2, timeout=30)
+            tool_resp = self._read_jsonrpc_response(proc, expected_id=2, timeout=30)
             if not tool_resp:
-                raise RuntimeError(f"MCP server did not respond to tools/call for '{tool_name}'")
+                poll = proc.poll()
+                stderr_text = ""
+                try:
+                    stderr_text = proc.stderr.read()
+                except Exception:
+                    pass
+                raise RuntimeError(
+                    f"MCP server did not respond to tools/call for '{tool_name}' (proc exit={poll}, stderr='{stderr_text[:500]}')"
+                )
 
             # Check for JSON-RPC error
             if "error" in tool_resp:
@@ -272,23 +291,24 @@ class ChatCutMCPAdapter(ChatCutAdapter):
             except Exception:
                 proc.kill()
 
-    def _read_jsonrpc_response(self, stdout, expected_id: int, timeout: float = 15) -> Optional[Dict]:
+    def _read_jsonrpc_response(self, proc: subprocess.Popen, expected_id: int, timeout: float = 15) -> Optional[Dict]:
         """Read lines from stdout until we find a JSON-RPC response with the expected id."""
-        import select
         import time
 
         deadline = time.time() + timeout
-        buffer = ""
 
         while time.time() < deadline:
-            # Read available data
             try:
-                line = stdout.readline()
-            except Exception:
+                line = proc.stdout.readline()
+            except Exception as e:
+                logger.warning("Error reading line from MCP stdout: %s", e)
                 break
 
             if not line:
-                # EOF or no data
+                # Check if process has terminated
+                if proc.poll() is not None:
+                    logger.warning("MCP process exited prematurely with code %s", proc.poll())
+                    break
                 time.sleep(0.05)
                 continue
 
@@ -299,10 +319,8 @@ class ChatCutMCPAdapter(ChatCutAdapter):
             try:
                 msg = json.loads(line)
                 if isinstance(msg, dict):
-                    # Check if this is the response we're looking for
                     if msg.get("id") == expected_id:
                         return msg
-                    # Skip notifications and other responses
                     continue
             except (json.JSONDecodeError, ValueError):
                 continue

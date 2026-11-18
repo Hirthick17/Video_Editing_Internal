@@ -379,6 +379,19 @@ def execute_pipeline_worker(mcp_mode: str, run_render: bool, operator_name: str)
         adapter = ChatCutMCPAdapter(mode=mcp_mode)
         proj_id, tl_id = adapter.discover_active_project()
         add_log(f"Phase 7: Discovered ChatCut Desktop Project: {proj_id[:8]}... | Timeline: {tl_id[:8]}...")
+
+        # Ingest authentic media assets into ChatCut Desktop before assembling timeline
+        if mcp_mode == "live" or getattr(adapter, "mode", "") == "live":
+            add_log("Phase 7: Ingesting verified assets into ChatCut Desktop project...")
+            for a_id, a_rec in project.asset_registry.items():
+                p = Path(a_rec.path)
+                if p.is_file() and p.suffix.lower() not in [".svg", ".ai"]:
+                    try:
+                        adapter.push_asset(proj_id, str(p.resolve()))
+                        add_log(f"Phase 7: Ingested '{p.name}' into ChatCut.")
+                    except Exception as ex:
+                        add_log(f"Phase 7: Asset ingestion notice for '{p.name}': {ex}")
+
         assembly_svc = AssemblyService(adapter=adapter)
         assembly_result = assembly_svc.assemble_short_13(
             project_id=proj_id,
