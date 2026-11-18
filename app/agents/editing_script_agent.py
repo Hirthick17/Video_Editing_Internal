@@ -44,8 +44,8 @@ except ImportError:  # Layer 00 not yet present — define a minimal stand-in
         min_cut_duration_frames: int = 45
         bgm_duck_db: float = -18.0
         narration_target_wpm: tuple = (110, 150)
-        accent_color_hex: str = "#25D366"
-        accent_color_name: str = "WhatsApp Green"
+        accent_color_hex: str = "#BF40BF"
+        accent_color_name: str = "Purple"
         typography_first: bool = True
 
     _default_philosophy = EditingPhilosophy()

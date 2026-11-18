@@ -49,6 +49,9 @@ ALLOWED_CHATCUT_TOOLS = {
     # Item & timeline manipulation
     "edit_item",
     "batch_edit_items",
+    # Captions & subtitles
+    "read_captions",
+    "edit_captions",
     # Asset management
     "push_asset",
     "browse_assets",
@@ -269,14 +272,26 @@ class ChatCutMCPAdapter(ChatCutAdapter):
 
             # Extract result content
             result = tool_resp.get("result", {})
-            if isinstance(result, dict) and "content" in result:
-                for item in result.get("content", []):
-                    if isinstance(item, dict) and item.get("type") == "text":
-                        try:
-                            return json.loads(item["text"])
-                        except (json.JSONDecodeError, ValueError):
-                            pass
-                return result
+            if isinstance(result, dict):
+                # Check for tool execution errors
+                if result.get("isError"):
+                    err_text = ""
+                    for item in result.get("content", []):
+                        if isinstance(item, dict) and item.get("type") == "text":
+                            err_text += item.get("text", "") + " "
+                    err_msg = err_text.strip() or str(result)
+                    if "conflicts with item" in err_msg or "already exists" in err_msg:
+                        return {"status": "ALREADY_PLACED", "detail": err_msg}
+                    raise RuntimeError(f"ChatCut tool '{tool_name}' failed with error: {err_msg}")
+
+                if "content" in result:
+                    for item in result.get("content", []):
+                        if isinstance(item, dict) and item.get("type") == "text":
+                            try:
+                                return json.loads(item["text"])
+                            except (json.JSONDecodeError, ValueError):
+                                pass
+                    return result
 
             return result if result else tool_resp
 
@@ -645,7 +660,7 @@ class ChatCutMCPAdapter(ChatCutAdapter):
 
     def get_timeline(self, timeline_id: str, project_id: str = "") -> EditorTimeline:
         """Fetch timeline structure and normalize into EditorTimeline."""
-        args: Dict[str, Any] = {"timelineId": timeline_id}
+        args: Dict[str, Any] = {"timelineId": timeline_id, "views": ["timeline"]}
         if project_id:
             args["projectId"] = project_id
         if self.mode == "simulated":
@@ -732,6 +747,9 @@ class ChatCutMCPAdapter(ChatCutAdapter):
                 if op.clip_spec:
                     spec = op.clip_spec
                     t_low = (op.track_id or spec.track_id or "V1").lower()
+                    if "txt" in t_low or (spec.asset_id and str(spec.asset_id).startswith("txt_")):
+                        continue
+
                     if "v1" in t_low:
                         chatcut_track = "V1"
                     elif "v2" in t_low:
@@ -751,27 +769,27 @@ class ChatCutMCPAdapter(ChatCutAdapter):
                     )
                     if not asset_uuid:
                         combined_key = f"{spec.name} {spec.asset_id}".lower()
-                        if "demo" in combined_key:
-                            asset_uuid = asset_map.get("demo-recording-1") or asset_map.get("demo-recording-1.mp4")
-                        elif "broll" in combined_key or "spreadsheet" in combined_key:
+                        if "broll" in combined_key or "spreadsheet" in combined_key:
                             asset_uuid = asset_map.get("broll-spreadsheet") or asset_map.get("broll-spreadsheet.mp4")
                         elif "music" in combined_key or "bgm" in combined_key:
                             asset_uuid = asset_map.get("bg-music") or asset_map.get("bg-music.mp3")
-                        elif "voice" in combined_key or "narration" in combined_key:
-                            asset_uuid = asset_map.get("bg-music") or asset_map.get("demo-recording-1")
+                        elif "demo" in combined_key or "voice" in combined_key or "narration" in combined_key:
+                            asset_uuid = asset_map.get("demo-recording-1") or asset_map.get("demo-recording-1.mp4")
                         else:
                             asset_uuid = next(iter(asset_map.values()), spec.asset_id)
 
                     is_audio = chatcut_track.startswith("A")
-                    adds.append({
+                    item_payload = {
                         "type": "audio" if is_audio else "video",
                         "assetId": str(asset_uuid or spec.asset_id),
                         "trackId": chatcut_track,
                         "startFrame": spec.start_frame,
                         "durationFrames": max(1, spec.end_frame - spec.start_frame),
                         "media": "audio" if is_audio else "video",
-                        "volume": spec.volume if is_audio else 1.0,
-                    })
+                    }
+                    if is_audio and spec.volume is not None:
+                        item_payload["volume"] = spec.volume
+                    adds.append(item_payload)
 
             if adds:
                 res = self._execute_cli_tool(
@@ -861,7 +879,10 @@ class ChatCutMCPAdapter(ChatCutAdapter):
 
     def preview_timeline(self, timeline_id: str, frame: int = 0, project_id: str = "") -> Dict[str, Any]:
         """Request visual timeline frame inspection."""
-        args: Dict[str, Any] = {"timelineId": timeline_id, "frame": frame}
+        args: Dict[str, Any] = {"timelineId": timeline_id, "views": ["timeline"]}
+        if frame > 0:
+            args["views"] = ["timeline", "viewer"]
+            args["viewerFrames"] = [frame]
         if project_id:
             args["projectId"] = project_id
         if self.mode == "simulated":
